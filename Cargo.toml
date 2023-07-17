@@ -1,13 +1,10 @@
 [package]
-name = "distributed_data_storage"
+name = "ponci"
 version = "0.1.0"
 edition = "2021"
 authors = ["Sheroz Khaydarov"]
-description = "Distributed Data Storage Service"
-documentation = "https://docs.rs/tick_counter"
+description = "ponci"
+documentation = "https://docs.rs/ponci"
 readme = "README.md"
-repository = "https://github.com/sheroz/distributed_data_storage"
+repository = "https://github.com/sheroz/ponci"
 license = "MIT"
-keywords = ["storage", "cache", "file-server"]
-
-
