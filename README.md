@@ -16,7 +16,8 @@
   * support for descriptions
   * support for streaming
   * support seek operations for blobs and files (reading data at given position)
-* nodes: implement consistent hashing
+* nodes
+  * support for consistent hashing
 * caching
   * support for evictions (LRU)
   * support for both client and server parts
