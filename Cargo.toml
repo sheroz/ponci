@@ -1,11 +1,11 @@
 [package]
-name = "ponci"
+name = "poncu"
 version = "0.1.0"
 edition = "2021"
 authors = ["Sheroz Khaydarov"]
 description = "Distributed Data Storage Service"
-documentation = "https://docs.rs/ponci"
+documentation = "https://docs.rs/poncu"
 readme = "README.md"
-repository = "https://github.com/sheroz/ponci"
+repository = "https://github.com/sheroz/poncu"
 license = "MIT"
 keywords = ["storage", "cache", "file-server"]

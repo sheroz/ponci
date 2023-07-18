@@ -1,9 +1,11 @@
-# Distributed Data Storage
+# Poncu
 
-[![crates.io](https://img.shields.io/crates/v/ponci)](https://crates.io/crates/ponci)
-[![docs](https://img.shields.io/docsrs/ponci)](https://docs.rs/ponci)
-[![build & test](https://github.com/sheroz/ponci/actions/workflows/ci.yml/badge.svg)](https://github.com/sheroz/ponci/actions/workflows/ci.yml)
-[![MIT](https://img.shields.io/github/license/sheroz/ponci)](https://github.com/sheroz/ponci/blob/main/LICENSE.txt)
+## Distributed Data Storage
+
+[![crates.io](https://img.shields.io/crates/v/poncu)](https://crates.io/crates/poncu)
+[![docs](https://img.shields.io/docsrs/poncu)](https://docs.rs/poncu)
+[![build & test](https://github.com/sheroz/poncu/actions/workflows/ci.yml/badge.svg)](https://github.com/sheroz/poncu/actions/workflows/ci.yml)
+[![MIT](https://img.shields.io/github/license/sheroz/poncu)](https://github.com/sheroz/poncu/blob/main/LICENSE.txt)
 
 * file storage
 * data storage (json, xml, binary)
