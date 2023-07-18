@@ -8,17 +8,15 @@
 [![MIT](https://img.shields.io/github/license/sheroz/poncu)](https://github.com/sheroz/poncu/tree/main/LICENSE.txt)
 
 * file server
-  * fetching files using HTTP (cleint)
+  * fetching files using HTTP (client)
   * fetching files using TCP (client)
 * data storage (json, xml, blob, file)
-  * support for tags
-  * support for metadata
-  * support for descriptions
-  * support for streaming
+  * support for metafields: tags, descriptions, metadata
   * support seek operations for blobs and files (reading data at given position)
-* nodes
+  * support for streaming
+* scaling & nodes
   * support for consistent hashing
 * caching
   * support for evictions (LRU)
-  * support for both client and server parts
+  * support client-side and server-side caches
 * logging
