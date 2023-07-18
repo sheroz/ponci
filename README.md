@@ -14,7 +14,8 @@
   * support for tags
   * support for metadata
   * support for descriptions
-  * support for streaming (data position seek)
+  * support for streaming
+  * support seek operations (reading data at given position)
 * nodes: implement consistent hashing
 * caching
   * support for evictions (LRU)
