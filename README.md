@@ -7,10 +7,16 @@
 [![build & test](https://github.com/sheroz/poncu/actions/workflows/ci.yml/badge.svg)](https://github.com/sheroz/poncu/actions/workflows/ci.yml)
 [![MIT](https://img.shields.io/github/license/sheroz/poncu)](https://github.com/sheroz/poncu/tree/main/LICENSE.txt)
 
-* file server (fetching files using http)
-* file storage
-* data storage (json, xml, binary)
-* support for tags
-* support for metadata
-* support for descriptions
-* support for streaming (data position seek)
+* file server
+  * fetching files using HTTP (cleint)
+  * fetching files using TCP (client)
+* data storage (json, xml, blob, file)
+  * support for tags
+  * support for metadata
+  * support for descriptions
+  * support for streaming (data position seek)
+* nodes: implement consistent hashing
+* caching
+  * support for evictions (LRU)
+  * support for both client and server parts
+* logging
