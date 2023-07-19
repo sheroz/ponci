@@ -6,21 +6,29 @@ pub struct StorageServer {
 }
 
 struct StorageItem {
-    item_type: ItemType,
-    item_data: Box<Vec<u8>>,
-    item_metadata: String
+    item_type: ItemComplexType,
+    data: Box<Vec<u8>>,
+    description: String,
+    tags: Vec<String>,
+    metadata: HashMap<String, String>,
+    expirable: bool,
+    expires_on: std::time::Instant,
 }
 
-pub enum ItemType {
-    String,
-    Boolean,
-    SignedInteger(u8),
-    UnsignedInteger(u8),
-    Float(u8),
+pub enum ItemComplexType {
+    Array(ItemBasicType),
     Blob,
     Json,
     Xml,
     File
+}
+
+pub enum ItemBasicType {
+    String,
+    Boolean,
+    SignedInteger(u8),
+    UnsignedInteger(u8),
+    Float(u8)
 }
 
 impl StorageServer {
