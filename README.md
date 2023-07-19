@@ -18,6 +18,6 @@
 * scaling & nodes
   * support for consistent hashing
 * caching
-  * support for evictions (LRU)
+  * support for cache evictions (LRU)
   * support client-side and server-side caches
 * logging
