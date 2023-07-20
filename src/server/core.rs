@@ -1,10 +1,10 @@
 use std::io;
 use std::collections::HashMap;
-use std::net::{IpAddr, SocketAddr, TcpListener};
+use std::net::{IpAddr, SocketAddr, TcpListener, TcpStream};
 use std::sync::Arc;
 use std::{thread, time};
-use log;
 use std::sync::atomic::{AtomicBool, Ordering};
+use log;
 
 pub trait TcpServer {
     fn new(ip_address: IpAddr, port: u16) -> Self;
@@ -13,6 +13,7 @@ pub trait TcpServer {
     fn set_item(key: String, item: StorageItem) -> bool;
     fn get_item(key: String) -> Option<StorageItem>;
     fn remove_item(key: String) -> bool;
+    fn process_stream(&self, stream: TcpStream, addr: SocketAddr);
 }
 
 pub struct PoncuTcpServer {
@@ -30,15 +31,19 @@ pub struct StorageItem {
     may_expire: bool,
     expires_on: std::time::Instant,
     storage: Vec<ItemStorageType>,
-    redundancy: u8 // min number of required replications: 0,1,2, …
+    redundancy: u8 // min number of required replications in the claster: 0,1,2, …
 }
 
 pub enum ItemComplexType {
     Array(ItemBasicType),
+    Set(ItemBasicType),
+    Map(ItemBasicType, ItemBasicType),
     Blob,
     Json,
     Xml,
-    File
+    File,
+    Folder,
+    Path,
 }
 
 pub enum ItemBasicType {
@@ -46,15 +51,13 @@ pub enum ItemBasicType {
     Boolean,
     SignedInteger(u8),
     UnsignedInteger(u8),
-    Float(u8)
+    Float(u8),
 }
 
 /// TBD
 pub enum ItemStorageType {
-    StoreInMemory,
-    DoNotStoreInMemory,
-    StoreInDisk,
-    DoNotStoreInDisk,
+    Memory, // default
+    Disk,
 }
 
 impl TcpServer for PoncuTcpServer {
@@ -72,22 +75,26 @@ impl TcpServer for PoncuTcpServer {
         server_ready.store(true, Ordering::SeqCst);
         listener.set_nonblocking(true).unwrap();
 
-        log::info!("poncu server listening {}:{} ...", self.ip_address, self.port);
+        log::info!("started listening on {}:{} ...", self.ip_address, self.port);
 
         while server_run.load(Ordering::SeqCst) {
             match listener.accept() {
-                Ok((_stream, addr)) => log::info!("new client: {addr:?}"),
+                Ok((stream, addr)) => self.process_stream(stream, addr),
                 Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
                     // wait until network socket is ready, typically implemented
                     // via platform-specific APIs such as epoll or IOCP
-                    thread::sleep(time::Duration::from_millis(20));
+                    thread::sleep(time::Duration::from_millis(1));
                     continue;
                 }                
                 Err(e) => log::error!("couldn't get client: {e:?}"),
             }
         }
         
-        log::info!("poncu server closed.");
+        log::info!("server closed.");
+    }
+
+    fn process_stream(&self, stream: TcpStream, addr: SocketAddr) {
+        log::debug!("connected a new client: {:?}", addr)
     }
 
     fn stop() {
@@ -105,5 +112,4 @@ impl TcpServer for PoncuTcpServer {
     fn remove_item(key: String) -> bool {
         true
     }
-
 }

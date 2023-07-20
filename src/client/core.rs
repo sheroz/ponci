@@ -25,7 +25,7 @@ impl TcpClient for PoncuTcpClient {
         let stream = TcpStream::connect(socket_address)?;
 
         let local_addr = stream.local_addr().unwrap();
-        log::info!("poncu client connected to {}:{} as {}:{}", self.ip_address, self.port, local_addr.ip(), local_addr.port());
+        log::info!("connected to {}:{} as {}:{}", self.ip_address, self.port, local_addr.ip(), local_addr.port());
 
         self.stream = Some(stream);
         Ok(())

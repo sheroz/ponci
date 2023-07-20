@@ -36,6 +36,8 @@ fn main() {
     let mut client = PoncuTcpClient::new(ip_address, port);
     let _ = client.connect();
 
+    thread::sleep(time::Duration::from_secs(3));
+
     // shutdown the server
     server_running.store(false, Ordering::SeqCst);
     let _ = server_handle.join();
