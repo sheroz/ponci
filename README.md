@@ -23,10 +23,10 @@
     * automatic (plug & play) configuration of existing nodes when a new node added into claster
       * new node needs to know at least one neighbour in the claster. The added node and other nodes would be updated automatically after completing the claster configuration rebuild process.
     * any change in the claster configuration that set or discovered (adding new node, failing existing nodes), would be automatically replicated to other nodes in the claster (no need for master node)
-    * clients receive configuration updates automatically
-      * each client request includes a param with a config_id
-      * server node will analyze the received config_id and may respond to client with updated configuration if there is any need
-    * each server node and client builds a weighted graph of nodes to optimize node/peer selection and other network operations.
+    * configuration updates are received by clients automatically
+      * each request of client includes a config_id parameter
+      * server node will analyze the received config_id and may respond to client with updated configuration
+    * clients and nodes build weighted graphs to optimize node/peer selection and other network operations.
 * caching
   * support for evictions (LRU)
   * support client-side and server-side caches

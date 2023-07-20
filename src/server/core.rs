@@ -1,17 +1,19 @@
 use std::collections::HashMap;
 use std::net::{IpAddr, SocketAddr, TcpListener};
 
-pub trait PoncuServer {
-    fn new() -> PoncuStorage;
-    fn start(port: u16, ip_address: IpAddr);
+pub trait TcpServer {
+    fn new(ip_address: IpAddr, port: u16) -> Self;
+    fn start(&self);
     fn stop();
     fn set_item(key: String, item: StorageItem) -> bool;
     fn get_item(key: String) -> Option<StorageItem>;
     fn remove_item(key: String) -> bool;
 }
 
-pub struct PoncuStorage {
+pub struct PoncuTcpServer {
     storage: HashMap<String, StorageItem>,
+    ip_address: IpAddr,
+    port: u16
 }
 
 pub struct StorageItem {
@@ -50,21 +52,23 @@ pub enum ItemStorageType {
     DoNotStoreInDisk,
 }
 
-impl PoncuServer for PoncuStorage {
-    fn new() -> Self {
-        PoncuStorage {
+impl TcpServer for PoncuTcpServer {
+    fn new(ip_address: IpAddr, port: u16) -> Self {
+        PoncuTcpServer {
             storage: HashMap::new(),
+            ip_address,
+            port
         }
     }
 
-    fn start(port: u16, ip_address: IpAddr) {
-        let socket_address = SocketAddr::new(ip_address, port);
+    fn start(&self) {
+        let socket_address = SocketAddr::new(self.ip_address, self.port);
         let listener = TcpListener::bind(socket_address).unwrap();
-        loop {
-            match listener.accept() {
-                Ok((_stream, addr)) => println!("new client: {addr:?}"),
-                Err(e) => println!("couldn't get client: {e:?}"),
-            }
+        println!("server listening on {}:{} ...", self.ip_address, self.port);
+
+        match listener.accept() {
+            Ok((_stream, addr)) => println!("new client: {addr:?}"),
+            Err(e) => println!("couldn't get client: {e:?}"),
         }
     }
 

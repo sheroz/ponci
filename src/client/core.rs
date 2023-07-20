@@ -1,41 +1,56 @@
 use std::io::prelude::*;
 use std::net::{IpAddr, SocketAddr, TcpStream};
 
-pub trait PoncuClient {
-    fn connect(port: u16, ip_address: IpAddr) -> std::io::Result<()>;
-    fn disconnect();
-    fn set_item(key: String);
-    fn get_item(key: String);
-    fn remove_item(key: String) -> bool;
+pub trait TcpClient {
+    fn new(ip_address:IpAddr, port:u16) -> Self;
+    fn connect(&mut self) -> std::io::Result<()>;
+    fn disconnect(&mut self)  -> std::io::Result<()>;
+    fn set_item(&mut self, key: String) -> std::io::Result<()>;
+    fn get_item(&mut self, key: String) -> std::io::Result<()>;
+    fn remove_item(&self, key: String) -> bool;
 }
-struct Client;
+pub struct PoncuTcpClient {
+    port: u16,
+    ip_address: IpAddr,
+    stream: Option<TcpStream>,
+}
 
-impl PoncuClient for Client {
+impl TcpClient for PoncuTcpClient {
+    fn new(ip_address:IpAddr, port:u16) -> Self {
+        PoncuTcpClient {port, ip_address, stream: None}
+    }
 
-    fn connect(port:u16, ip_address:IpAddr) -> std::io::Result<()> {
-        let socket_address = SocketAddr::new(ip_address, port);
-        let mut stream = TcpStream::connect(socket_address)?;
-    
-        stream.write(&[1])?;
-        stream.read(&mut [0; 128])?;
+    fn connect(&mut self) -> std::io::Result<()> {
+        let socket_address = SocketAddr::new(self.ip_address, self.port);
+        let stream = TcpStream::connect(socket_address)?;
+        self.stream = Some(stream);
         Ok(())
     }
 
-    fn disconnect() {
-
+    fn disconnect(&mut self) -> std::io::Result<()> {
+        let stream = self.stream.as_mut().unwrap();
+        stream.flush()?;
+        self.stream = None;
+        Ok(())
     }
 
-    fn set_item(key: String) {
-
+    fn set_item(&mut self, key: String) -> std::io::Result<()> {
+        let stream = self.stream.as_mut().unwrap();
+        let mut buf = [0; 128];
+        stream.write(&buf)?;
+        stream.read(&mut buf)?;
+        Ok(())
     }
 
-    fn get_item(key: String) {
-
+    fn get_item(&mut self, key: String) -> std::io::Result<()>  {
+        let stream = self.stream.as_mut().unwrap();
+        let mut buf = [0; 128];
+        stream.write(&buf)?;
+        stream.read(&mut buf)?;
+        Ok(())
     }
 
-    fn remove_item(key: String) -> bool {
+    fn remove_item(&self, key: String) -> bool {
         true
     }
-
-
 }
