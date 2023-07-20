@@ -2,8 +2,8 @@ appenders:
     stdout:
         kind: console
         encoder:
-            pattern: "{d(%+)(utc)} [{f}:{L}] {h({l})} {M}:{m}{n}"
+            pattern: "{d(%+)(utc)} [{f}:{L}] {h({l})} {m}{n}"
 root:
-    level: debug
+    level: trace
     appenders:
         - stdout
