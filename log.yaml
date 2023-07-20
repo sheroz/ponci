@@ -1,0 +1,9 @@
+appenders:
+    stdout:
+        kind: console
+        encoder:
+            pattern: "{d(%+)(utc)} [{f}:{L}] {h({l})} {M}:{m}{n}"
+root:
+    level: debug
+    appenders:
+        - stdout

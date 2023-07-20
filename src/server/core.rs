@@ -20,8 +20,10 @@ pub struct StorageItem {
     description: String,
     tags: Vec<String>,
     metadata: HashMap<String, String>,
-    expirable: bool,
+    may_expire: bool,
     expires_on: std::time::Instant,
+    storage: Vec<ItemStorageType>,
+    redundancy: u8 // min number of required replications: 0,1,2, …
 }
 
 pub enum ItemComplexType {
@@ -38,6 +40,14 @@ pub enum ItemBasicType {
     SignedInteger(u8),
     UnsignedInteger(u8),
     Float(u8)
+}
+
+/// TBD
+pub enum ItemStorageType {
+    StoreInMemory,
+    DoNotStoreInMemory,
+    StoreInDisk,
+    DoNotStoreInDisk,
 }
 
 impl PoncuServer for PoncuStorage {

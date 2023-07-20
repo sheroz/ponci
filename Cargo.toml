@@ -12,7 +12,7 @@ keywords = ["storage", "cache", "file-server"]
 
 [dependencies]
 log = "0.4"
-env_logger = "0.10"
+log4rs = "1.2"
 
 [dev-dependencies]
 criterion = "0.5"

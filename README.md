@@ -15,9 +15,19 @@
   * fetch using HTTP
   * fetch using a connected TCP client
 * authorization
-* scaling & nodes
+* scaling
   * support for consistent hashing
+  * easy scaling
+    * built-in configuration service in node servers
+    * auto replication of configuration parameters among server nodes
+    * automatic (plug & play) configuration of existing nodes when a new node added into claster
+      * new node needs to know only one neigbour to start in the claster
+    * any change in configuration that set or discovered at any node, would be automatically replicated to other nodes in the claster (no need for master node)
+    * clients receive changes in the configuration automatically
+      * each client request includes a param with a config_id
+      * server node will analyze the received config_id and may respond to client with updated configuration if there is any change
+    * each server node and client builds a weighted graph of nodes to optimize node/peer selection and other network operations.
 * caching
-  * support for cache evictions (LRU)
+  * support for evictions (LRU)
   * support client-side and server-side caches
 * logging
