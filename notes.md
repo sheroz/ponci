@@ -37,7 +37,8 @@
   * support for folders
   * support for path
 
-    Storage space samples:
+Storage space samples:
+
     path_id1 = path1/sub-path1
     path_id2 = path_id1/other_path2/item_id1
 
