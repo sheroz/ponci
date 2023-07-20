@@ -31,10 +31,14 @@ fn main() {
         thread::sleep(time::Duration::from_millis(20));
     }
     
-    let mut client = PoncuTcpClient::new(ip_address, port);
-    let _ = client.connect();
+    // thread::sleep(time::Duration::from_secs(3));
 
-    thread::sleep(time::Duration::from_secs(3));
+    let mut client = PoncuTcpClient::new(ip_address, port);
+    client.connect().expect("client connection error");
+
+    let msg = String::from("Hi there!");
+    client.set_item(msg).expect("set item error");
+
 
     // shutdown the server
     // server_shutdown.store(false, Ordering::SeqCst);

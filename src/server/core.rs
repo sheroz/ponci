@@ -1,4 +1,4 @@
-use std::io;
+use std::io::{self, Read, BufReader};
 use std::collections::HashMap;
 use std::net::{IpAddr, SocketAddr, TcpListener, TcpStream};
 use std::sync::Arc;
@@ -81,9 +81,8 @@ impl TcpServer for PoncuTcpServer {
             // listener.set_nonblocking(true).unwrap();
             
             while !shutdown.load(Ordering::SeqCst) {
-                let connection_close = shutdown.clone();
                 match listener.accept() {
-                    Ok((stream, addr)) => handle_connection(stream, addr, connection_close),
+                    Ok((stream, addr)) => handle_connection(stream, addr, shutdown.clone()),
                     /*
                     Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
                         // wait until network socket is ready, typically implemented
@@ -117,6 +116,12 @@ impl TcpServer for PoncuTcpServer {
     }
 }
 
-fn handle_connection(stream: TcpStream, addr: SocketAddr, connection_close: Arc<AtomicBool>) {
-    log::debug!("client connected: {:?}", addr)
+fn handle_connection(mut stream: TcpStream, addr: SocketAddr, _shutdowm: Arc<AtomicBool>) {
+    use std::io::BufRead;
+    log::debug!("client connected: {:?}", addr);
+
+    let mut reader = BufReader::new(stream);
+    let mut msg = String::new();
+    reader.read_line(&mut msg).unwrap();
+    log::debug!("received message: {:}", msg);
 }
