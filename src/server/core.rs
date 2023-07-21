@@ -9,6 +9,7 @@ use log;
 
 pub trait TcpServer {
     fn new(ip_address: IpAddr, port: u16) -> Self;
+    fn with_socket(socket_addr: &SocketAddr) -> Self;
     fn start(&self, server_shutdown: Arc<AtomicBool>, server_ready: Arc<AtomicBool>) -> JoinHandle<()>;
     fn stop();
     fn set_item(key: String, item: StorageItem) -> bool;
@@ -18,8 +19,7 @@ pub trait TcpServer {
 
 pub struct PoncuTcpServer {
     storage: HashMap<String, StorageItem>,
-    ip_address: IpAddr,
-    port: u16
+    socket_addr: SocketAddr,
 }
 
 pub struct StorageItem {
@@ -61,23 +61,25 @@ pub enum ItemStorageType {
 }
 
 impl TcpServer for PoncuTcpServer {
-    fn new(ip_address: IpAddr, port: u16) -> Self {
-        PoncuTcpServer {
-            storage: HashMap::new(),
-            ip_address,
-            port
-        }
+
+    fn new(ip_address:IpAddr, port:u16) -> Self {
+        let socket_addr: SocketAddr = SocketAddr::new(ip_address, port);
+        PoncuTcpServer::with_socket(&socket_addr)
+    }
+
+    fn with_socket(socket_addr: &SocketAddr) -> Self {
+        PoncuTcpServer {socket_addr: socket_addr.clone(), storage: HashMap::new()}
     }
 
     fn start(&self, shutdown: Arc<AtomicBool>, ready: Arc<AtomicBool>) -> JoinHandle<()> {
-        let socket_address = SocketAddr::new(self.ip_address, self.port);
+        let socket_address: SocketAddr = self.socket_addr;
 
         let handle = thread::spawn(move || {
 
             let listener = TcpListener::bind(socket_address).unwrap();
             ready.store(true, Ordering::SeqCst);
 
-            log::info!("started listening on {}:{} ...", socket_address.ip(), socket_address.port());
+            log::info!("started listening on {} ...", socket_address);
             // listener.set_nonblocking(true).unwrap();
             
             while !shutdown.load(Ordering::SeqCst) {
@@ -118,10 +120,10 @@ impl TcpServer for PoncuTcpServer {
 
 fn handle_connection(mut stream: TcpStream, addr: SocketAddr, _shutdowm: Arc<AtomicBool>) {
     use std::io::BufRead;
-    log::debug!("client connected: {:?}", addr);
+    log::debug!("client connected: {}", addr);
 
     let mut reader = BufReader::new(stream);
     let mut msg = String::new();
     reader.read_line(&mut msg).unwrap();
-    log::debug!("received message: {:}", msg);
+    log::debug!("received message: {}", msg);
 }

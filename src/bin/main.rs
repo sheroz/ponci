@@ -12,17 +12,20 @@ fn main() {
     log4rs::init_file("log.yaml", Default::default()).unwrap();
 
     log::info!("{} v{}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
-    
+
+    let config = poncu::utils::config::read_config();
+    log::debug!("{:#?}", config);
+
+    let node_socket_addresses = poncu::utils::config::get_node_socket_addresses(&config);
+    let node_socket = node_socket_addresses[0];
+    let server = PoncuTcpServer::with_socket(&node_socket);
+
     let server_ready = Arc::new(AtomicBool::new(false));
     let server_shutdown = Arc::new(AtomicBool::new(false));
-
-    let ip_address = IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1));
-    let port = 9191_u16;
     let server_signal_shutdown = server_shutdown.clone();
     let server_get_ready = server_ready.clone();
-   
-    let server = PoncuTcpServer::new(ip_address, port);
     let server_handle = server.start(server_signal_shutdown, server_get_ready);
+
 
     while !server_ready.load(Ordering::SeqCst) {
         if log_enabled!(Level::Trace) {
@@ -32,16 +35,17 @@ fn main() {
     }
     
     // thread::sleep(time::Duration::from_secs(3));
-
-    let mut client = PoncuTcpClient::new(ip_address, port);
+    let remote_nodes = poncu::utils::config::get_remote_nodes(&config);
+    let remote_address = remote_nodes[0];
+    let mut client = PoncuTcpClient::with_socket(&remote_address);
     client.connect().expect("client connection error");
 
     let msg = String::from("Hi there!");
     client.set_item(msg).expect("set item error");
 
-
     // shutdown the server
     // server_shutdown.store(false, Ordering::SeqCst);
     let _ = server_handle.join();
     log::info!("server closed.");
+
 }
