@@ -18,7 +18,7 @@ remote_nodes = [ 127.0.0.1:9191, ]
 # client settings
 client_name = test
 client_id = test1@file_api
-client_access_token = "F0A72890897ACEFDB2C6C8C06134339A73CC6205833CA38DBA6F9FDC94B60596"
+client_access_token = F0A72890897ACEFDB2C6C8C06134339A73CC6205833CA38DBA6F9FDC94B60596
 
 # redundancy settings
 # redundancy_strategy: normal   - replicate item on 'redundancy_replica_min' nodes
