@@ -1,35 +1,38 @@
+use crate::utils::config::Config;
 use std::io::prelude::*;
-use std::net::{IpAddr, SocketAddr, TcpStream};
+use std::net::TcpStream;
 
-pub trait TcpClient {
-    fn new(ip_address:IpAddr, port:u16) -> Self;
-    fn with_socket(listen_socket: &SocketAddr) -> Self;
+pub trait TcpClient<'a> {
+    fn with_config(config: &'a Config) -> Self;
     fn connect(&mut self) -> std::io::Result<()>;
-    fn disconnect(&mut self)  -> std::io::Result<()>;
+    fn disconnect(&mut self) -> std::io::Result<()>;
     fn set_item(&mut self, key: String) -> std::io::Result<()>;
     fn get_item(&mut self, key: String) -> std::io::Result<()>;
     fn remove_item(&self, key: String) -> bool;
 }
-pub struct PoncuTcpClient {
-    socket_addr: SocketAddr,
+pub struct PoncuTcpClient<'a> {
     stream: Option<TcpStream>,
+    config: &'a Config,
 }
 
-impl TcpClient for PoncuTcpClient {
-    fn new(ip_address:IpAddr, port:u16) -> Self {
-        let socket_addr: SocketAddr = SocketAddr::new(ip_address, port);
-        PoncuTcpClient::with_socket(&socket_addr)
-    }
-
-    fn with_socket(socket_addr: &SocketAddr) -> Self {
-        PoncuTcpClient {socket_addr: socket_addr.clone(), stream: None}
+impl<'a> TcpClient<'a> for PoncuTcpClient<'a> {
+    fn with_config(config: &'a Config) -> Self {
+        PoncuTcpClient {
+            stream: None,
+            config: config,
+        }
     }
 
     fn connect(&mut self) -> std::io::Result<()> {
-        let stream = TcpStream::connect(self.socket_addr)?;
+        assert!(self.config.remote.is_some());
+        let config_remote = self.config.remote.as_ref().unwrap();
+        assert!(!config_remote.nodes.is_empty());
+        let remote_address = config_remote.nodes[0];
+
+        let stream = TcpStream::connect(remote_address)?;
 
         let local_addr = stream.local_addr().unwrap();
-        log::info!("connected to {} as {}", self.socket_addr, local_addr);
+        log::info!("connected to {} as {}", remote_address, local_addr);
 
         self.stream = Some(stream);
         Ok(())
@@ -45,13 +48,13 @@ impl TcpClient for PoncuTcpClient {
     fn set_item(&mut self, key: String) -> std::io::Result<()> {
         use std::io::BufWriter;
         let stream = self.stream.as_mut().unwrap();
-        
+
         let mut writer = BufWriter::new(stream);
         writeln!(writer, "{key}")?;
         Ok(())
     }
 
-    fn get_item(&mut self, key: String) -> std::io::Result<()>  {
+    fn get_item(&mut self, _key: String) -> std::io::Result<()> {
         let stream = self.stream.as_mut().unwrap();
         let mut buf = [0; 128];
         stream.write(&buf)?;
@@ -59,7 +62,7 @@ impl TcpClient for PoncuTcpClient {
         Ok(())
     }
 
-    fn remove_item(&self, key: String) -> bool {
+    fn remove_item(&self, _key: String) -> bool {
         true
     }
 }

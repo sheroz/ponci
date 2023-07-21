@@ -13,12 +13,7 @@ fn main() {
     );
 
     let config = config::get_config();
-    assert!(config.remote.is_some());
-    let config_remote = config.remote.unwrap();
-    assert!(!config_remote.nodes.is_empty());
-    let remote_address = config_remote.nodes[0];
-
-    let mut client = PoncuTcpClient::with_socket(&remote_address);
+    let mut client = PoncuTcpClient::with_config(&config);
     client.connect().expect("client connection error");
 
     let msg = String::from("Hi there!");

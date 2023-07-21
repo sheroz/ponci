@@ -1,37 +1,41 @@
-use std::io::{self, Read, BufReader};
-use std::collections::HashMap;
-use std::net::{IpAddr, SocketAddr, TcpListener, TcpStream};
-use std::sync::Arc;
-use std::thread::JoinHandle;
-use std::{thread, time};
-use std::sync::atomic::{AtomicBool, Ordering};
+use crate::utils::config::Config;
 use log;
+use std::collections::HashMap;
+use std::io::BufReader;
+use std::net::{SocketAddr, TcpListener, TcpStream};
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
+use std::thread;
+use std::thread::JoinHandle;
 
-pub trait TcpServer {
-    fn new(ip_address: IpAddr, port: u16) -> Self;
-    fn with_socket(socket_addr: &SocketAddr) -> Self;
-    fn start(&self, server_shutdown: Arc<AtomicBool>, server_ready: Arc<AtomicBool>) -> JoinHandle<()>;
+pub trait TcpServer<'a> {
+    fn with_config(config: &'a Config) -> Self;
+    fn start(
+        &self,
+        server_shutdown: Arc<AtomicBool>,
+        server_ready: Arc<AtomicBool>,
+    ) -> JoinHandle<()>;
     fn stop();
     fn set_item(key: String, item: StorageItem) -> bool;
     fn get_item(key: String) -> Option<StorageItem>;
     fn remove_item(key: String) -> bool;
 }
 
-pub struct PoncuTcpServer {
-    storage: HashMap<String, StorageItem>,
-    socket_addr: SocketAddr,
+pub struct PoncuTcpServer<'a> {
+    _storage: HashMap<String, StorageItem>,
+    config: &'a Config,
 }
 
 pub struct StorageItem {
-    item_type: ItemComplexType,
-    data: Box<Vec<u8>>,
-    description: String,
-    tags: Vec<String>,
-    metadata: HashMap<String, String>,
-    may_expire: bool,
-    expires_on: std::time::Instant,
-    storage: Vec<ItemStorageType>,
-    redundancy: u8 // min number of required replications in the claster: 0,1,2, …
+    _item_type: ItemComplexType,
+    _data: Box<Vec<u8>>,
+    _description: String,
+    _tags: Vec<String>,
+    _metadata: HashMap<String, String>,
+    _may_expire: bool,
+    _expires_on: std::time::Instant,
+    _storage: Vec<ItemStorageType>,
+    _redundancy: u8, // min number of required replications in the claster: 0,1,2, …
 }
 
 pub enum ItemComplexType {
@@ -60,28 +64,28 @@ pub enum ItemStorageType {
     Disk,
 }
 
-impl TcpServer for PoncuTcpServer {
-
-    fn new(ip_address:IpAddr, port:u16) -> Self {
-        let socket_addr: SocketAddr = SocketAddr::new(ip_address, port);
-        PoncuTcpServer::with_socket(&socket_addr)
-    }
-
-    fn with_socket(socket_addr: &SocketAddr) -> Self {
-        PoncuTcpServer {socket_addr: socket_addr.clone(), storage: HashMap::new()}
+impl<'a> TcpServer<'a> for PoncuTcpServer<'a> {
+    fn with_config(config: &'a Config) -> Self {
+        PoncuTcpServer {
+            _storage: HashMap::new(),
+            config: config,
+        }
     }
 
     fn start(&self, shutdown: Arc<AtomicBool>, ready: Arc<AtomicBool>) -> JoinHandle<()> {
-        let socket_address: SocketAddr = self.socket_addr;
+        assert!(self.config.server.is_some());
+        let server_config = self.config.server.as_ref();
+        let config_server = server_config.unwrap();
+        assert!(!config_server.listen_on.is_empty());
+        let socket_address = config_server.listen_on[0];
 
         let handle = thread::spawn(move || {
-
             let listener = TcpListener::bind(socket_address).unwrap();
             ready.store(true, Ordering::SeqCst);
 
             log::info!("started listening on {} ...", socket_address);
             // listener.set_nonblocking(true).unwrap();
-            
+
             while !shutdown.load(Ordering::SeqCst) {
                 match listener.accept() {
                     Ok((stream, addr)) => handle_connection(stream, addr, shutdown.clone()),
@@ -91,34 +95,32 @@ impl TcpServer for PoncuTcpServer {
                         // via platform-specific APIs such as epoll or IOCP
                         thread::sleep(time::Duration::from_millis(1));
                         continue;
-                    }                
+                    }
                     */
                     Err(e) => log::error!("couldn't get client: {e:?}"),
                 }
             }
         });
-        
+
         handle
     }
 
-    fn stop() {
+    fn stop() {}
 
-    }
-
-    fn set_item(key: String, item: StorageItem) -> bool {
+    fn set_item(_key: String, _item: StorageItem) -> bool {
         false
     }
 
-    fn get_item(key: String) -> Option<StorageItem> {
+    fn get_item(_key: String) -> Option<StorageItem> {
         None
     }
 
-    fn remove_item(key: String) -> bool {
+    fn remove_item(_key: String) -> bool {
         true
     }
 }
 
-fn handle_connection(mut stream: TcpStream, addr: SocketAddr, _shutdowm: Arc<AtomicBool>) {
+fn handle_connection(stream: TcpStream, addr: SocketAddr, _shutdowm: Arc<AtomicBool>) {
     use std::io::BufRead;
     log::debug!("client connected: {}", addr);
 
