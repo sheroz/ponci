@@ -1,9 +1,9 @@
 # poncu configuration file
 
 # server node settings
-node:
+server:
   name: poncu7
-  description: "Poncu server #7 at cool dedicated hardware in a great data center"
+  description: "Poncu server node #7 running on cool dedicated hardware located in a great data center"
   id: poncu1@0007_cdh_gdc
   access_token: face0aa08c29eb27aa3e0ebb7fe9d9a678a9caecc1f7b886e35bc16b1c266f42
   listen_addresses: 127.0.0.1

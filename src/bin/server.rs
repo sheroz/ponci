@@ -1,23 +1,27 @@
+use core::time;
 use log::{log_enabled, Level};
 use log4rs;
 use poncu::server::core::{PoncuTcpServer, TcpServer};
-use poncu::client::core::{PoncuTcpClient, TcpClient};
-use core::time;
-use std::net::{IpAddr, Ipv4Addr};
+use poncu::utils::config;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::thread;
-use std::sync::atomic::{AtomicBool, Ordering};
+
 fn main() {
-    
     log4rs::init_file("log.yaml", Default::default()).unwrap();
 
-    log::info!("{} server v{}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
+    log::info!(
+        "{} server v{}",
+        env!("CARGO_PKG_NAME"),
+        env!("CARGO_PKG_VERSION")
+    );
 
-    let config = poncu::utils::config::read_config();
-    println!("{:#?}", config);
+    let config = config::get_config();
+    assert!(config.server.is_some());
+    let config_server = config.server.unwrap();
+    assert!(!config_server.listen_on.is_empty());
+    let node_socket = config_server.listen_on[0];
 
-    let node_socket_addresses = poncu::utils::config::get_node_socket_addresses(&config);
-    let node_socket = node_socket_addresses[0];
     let server = PoncuTcpServer::with_socket(&node_socket);
 
     let server_ready = Arc::new(AtomicBool::new(false));
@@ -32,7 +36,9 @@ fn main() {
         }
         thread::sleep(time::Duration::from_millis(20));
     }
-
-    log::trace!("server ready.");
+    
+    if log_enabled!(Level::Trace) {
+        log::trace!("server ready.");
+    }
 
 }
