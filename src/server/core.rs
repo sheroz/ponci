@@ -26,7 +26,7 @@ pub struct PoncuTcpServer<'a> {
     config: &'a Config,
 }
 
-pub type PoncuMutex <'a> = Arc<Mutex<PoncuTcpServer <'a>> >;
+pub type PoncuMutex <'a> = Arc<Mutex<&'a PoncuTcpServer <'a>> >;
 
 pub struct StorageItem {
     _item_type: ItemComplexType,

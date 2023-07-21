@@ -16,7 +16,7 @@ fn main() {
     let config = config::get_config();
     let server = PoncuTcpServer::with_config(&config);
 
-    // let poncu_mutex: PoncuMutex = Arc::new(Mutex::new(server));
+    let _poncu_mutex: PoncuMutex = Arc::new(Mutex::new(&server));
 
     let server_ready = Arc::new(AtomicBool::new(false));
     let server_shutdown = Arc::new(AtomicBool::new(false));
