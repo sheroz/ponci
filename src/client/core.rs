@@ -19,7 +19,7 @@ impl<'a> TcpClient<'a> for PoncuTcpClient<'a> {
     fn with_config(config: &'a Config) -> Self {
         PoncuTcpClient {
             stream: None,
-            config: config,
+            config,
         }
     }
 

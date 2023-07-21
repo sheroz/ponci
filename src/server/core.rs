@@ -68,14 +68,13 @@ impl<'a> TcpServer<'a> for PoncuTcpServer<'a> {
     fn with_config(config: &'a Config) -> Self {
         PoncuTcpServer {
             _storage: HashMap::new(),
-            config: config,
+            config,
         }
     }
 
     fn start(&self, shutdown: Arc<AtomicBool>, ready: Arc<AtomicBool>) -> JoinHandle<()> {
         assert!(self.config.server.is_some());
-        let server_config = self.config.server.as_ref();
-        let config_server = server_config.unwrap();
+        let config_server = self.config.server.as_ref().unwrap();
         assert!(!config_server.listen_on.is_empty());
         let socket_address = config_server.listen_on[0];
 
