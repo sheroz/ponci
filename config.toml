@@ -1,17 +1,31 @@
 # configuration file
 
-[server]
-name = poncu1
-id = poncu1@vm
-listen_addres = 127.0.0.1
-listen_port = 9191
+# server node settings
+node_name = poncu7
+node_description = Poncu server #7 at cool dedicated hardware in a great data center
+node_id = poncu1@0007_cdh_gdc
+node_listen_addresses = localhost, 127.0.0.1
+node_listen_port = 9191
+node_connections_max = 20
+node_threads_max  = 4
+node_storage_ram_max = 512M
+node_storage_disk_max = 2G
+node_storage_disk_root = "/var/poncu"
 
-[remote]
-nodes = [ 127.0.0.1:9191, ]
+# pool of remote server nodes
+remote_nodes = [ 127.0.0.1:9191, ]
 
-[client]
-name = test
-id = test1
-token = "F0A72890897ACEFDB2C6C8C06134339A73CC6205833CA38DBA6F9FDC94B60596"
+# client settings
+client_name = test
+client_id = test1@file_api
+client_access_token = "F0A72890897ACEFDB2C6C8C06134339A73CC6205833CA38DBA6F9FDC94B60596"
+
+# redundancy settings
+# redundancy_strategy: normal   - replicate item on 'redundancy_replica_min' nodes
+# redundancy_strategy: maximum  - replicate item on 'redundancy_replica_max' nodes if there are enough resources 
+# redundancy_strategy: paranoid - replicate item on all nodes if there are enough resources
+redundancy_strategy = normal
+redundancy_replica_min = 2
+redundancy_replica_max = 5
 
 ## end of configuration
