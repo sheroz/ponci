@@ -4,16 +4,16 @@ use std::collections::HashMap;
 use std::io::BufReader;
 use std::net::{SocketAddr, TcpListener, TcpStream};
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::thread;
 use std::thread::JoinHandle;
 
 pub trait TcpServer<'a> {
     fn with_config(config: &'a Config) -> Self;
     fn start(
-        &self,
-        server_shutdown: Arc<AtomicBool>,
-        server_ready: Arc<AtomicBool>,
+        &'a self,
+        server_shutdown: &Arc<AtomicBool>,
+        server_ready: &Arc<AtomicBool>,
     ) -> JoinHandle<()>;
     fn stop();
     fn set_item(key: String, item: StorageItem) -> bool;
@@ -25,6 +25,8 @@ pub struct PoncuTcpServer<'a> {
     _storage: HashMap<String, StorageItem>,
     config: &'a Config,
 }
+
+pub type PoncuMutex <'a> = Arc<Mutex<PoncuTcpServer <'a>> >;
 
 pub struct StorageItem {
     _item_type: ItemComplexType,
@@ -72,22 +74,27 @@ impl<'a> TcpServer<'a> for PoncuTcpServer<'a> {
         }
     }
 
-    fn start(&self, shutdown: Arc<AtomicBool>, ready: Arc<AtomicBool>) -> JoinHandle<()> {
+    fn start(&self, shutdown: &Arc<AtomicBool>, ready: &Arc<AtomicBool>) -> JoinHandle<()> {
+
         assert!(self.config.server.is_some());
         let config_server = self.config.server.as_ref().unwrap();
         assert!(!config_server.listen_on.is_empty());
         let socket_address = config_server.listen_on[0];
 
+        let signal_shutdown = shutdown.clone();
+        let signal_ready = ready.clone();
+
+        let listener = TcpListener::bind(socket_address).unwrap();
+        signal_ready.store(true, Ordering::SeqCst);
+
+        log::info!("started listening on {} ...", socket_address);
+        // listener.set_nonblocking(true).unwrap();
+
         let handle = thread::spawn(move || {
-            let listener = TcpListener::bind(socket_address).unwrap();
-            ready.store(true, Ordering::SeqCst);
 
-            log::info!("started listening on {} ...", socket_address);
-            // listener.set_nonblocking(true).unwrap();
-
-            while !shutdown.load(Ordering::SeqCst) {
+            while !signal_shutdown.load(Ordering::SeqCst) {
                 match listener.accept() {
-                    Ok((stream, addr)) => handle_connection(stream, addr, shutdown.clone()),
+                    Ok((stream, addr)) => handle_connection(stream, addr, signal_shutdown.clone()),
                     /*
                     Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
                         // wait until network socket is ready, typically implemented

@@ -32,7 +32,7 @@
   * support for evictions (LRU)
   * support client-side and server-side caches
 
-* Logging
+* WIP: Logging
 
 * Storage Spaces
   * support for folders
@@ -63,5 +63,5 @@ Storage space samples:
         item_id1 : FileItem
     ]
 
-* config file with server and client sections
+* WIP: config file with server and client sections
 * benchmarks against single thread, pooling and async

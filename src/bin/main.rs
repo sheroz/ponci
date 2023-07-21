@@ -2,10 +2,10 @@ use core::time;
 use log::{log_enabled, Level};
 use log4rs;
 use poncu::client::core::{PoncuTcpClient, TcpClient};
-use poncu::server::core::{PoncuTcpServer, TcpServer};
+use poncu::server::core::{PoncuTcpServer, TcpServer, PoncuMutex};
 use poncu::utils::config;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::thread;
 
 fn main() {
@@ -16,11 +16,11 @@ fn main() {
     let config = config::get_config();
     let server = PoncuTcpServer::with_config(&config);
 
+    // let poncu_mutex: PoncuMutex = Arc::new(Mutex::new(server));
+
     let server_ready = Arc::new(AtomicBool::new(false));
     let server_shutdown = Arc::new(AtomicBool::new(false));
-    let server_signal_shutdown = server_shutdown.clone();
-    let server_get_ready = server_ready.clone();
-    let server_handle = server.start(server_signal_shutdown, server_get_ready);
+    let server_handle = server.start(&server_shutdown, &server_ready);
 
     while !server_ready.load(Ordering::SeqCst) {
         if log_enabled!(Level::Trace) {
@@ -40,6 +40,5 @@ fn main() {
     // shutdown the server
     // server_shutdown.store(false, Ordering::SeqCst);
     let _ = server_handle.join();
-
     log::info!("server closed.");
 }
