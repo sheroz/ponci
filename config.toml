@@ -1,0 +1,17 @@
+# configuration file
+
+[server]
+name = poncu1
+id = poncu1@vm
+listen_addres = 127.0.0.1
+listen_port = 9191
+
+[remote]
+nodes = [ 127.0.0.1:9191, ]
+
+[client]
+name = test
+id = test1
+token = "F0A72890897ACEFDB2C6C8C06134339A73CC6205833CA38DBA6F9FDC94B60596"
+
+## end of configuration

@@ -15,6 +15,7 @@
   * support for Fine-Grained Access Control
 
 * Scaling
+  * heartbeat
   * consistent hashing
   * easy scaling
     * built-in configuration service in nodes
@@ -61,3 +62,6 @@ Storage space samples:
         other_path2 : FolderItem,
         item_id1 : FileItem
     ]
+
+* config file with server and client sections
+* benchmarks against single thread, pooling and async
