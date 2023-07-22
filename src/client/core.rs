@@ -46,11 +46,9 @@ impl<'a> TcpClient<'a> for PoncuTcpClient<'a> {
     }
 
     fn set_item(&mut self, key: String) -> std::io::Result<()> {
-        use std::io::BufWriter;
         let stream = self.stream.as_mut().unwrap();
-
-        let mut writer = BufWriter::new(stream);
-        writeln!(writer, "{key}")?;
+        stream.write_all(key.as_bytes())?;
+        stream.flush().unwrap();
         Ok(())
     }
 

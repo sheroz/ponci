@@ -21,7 +21,7 @@ fn main() {
 
     let server_ready = Arc::new(AtomicBool::new(false));
     let server_shutdown = Arc::new(AtomicBool::new(false));
-    let _server_handle = server.start(&server_shutdown, &server_ready);
+    server.start(&server_shutdown, &server_ready);
 
     while !server_ready.load(Ordering::SeqCst) {
         if log_enabled!(Level::Trace) {

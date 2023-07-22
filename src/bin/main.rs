@@ -14,13 +14,19 @@ fn main() {
     log::info!("{} v{}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
 
     let config = config::get_config();
-    let server = PoncuTcpServer::with_config(&config);
-
-    let _poncu_mutex: PoncuMutex = Arc::new(Mutex::new(&server));
 
     let server_ready = Arc::new(AtomicBool::new(false));
     let server_shutdown = Arc::new(AtomicBool::new(false));
-    let server_handle = server.start(&server_shutdown, &server_ready);
+
+    let signal_ready = server_ready.clone();
+    let signal_shutdown = server_shutdown.clone();
+
+    let server_config = config.clone();
+    let server_handle = thread::spawn(move || {
+        let server = PoncuTcpServer::with_config(&server_config);
+        let _poncu_mutex: PoncuMutex = Arc::new(Mutex::new(&server));
+        server.start(&signal_shutdown, &signal_ready);
+    });
 
     while !server_ready.load(Ordering::SeqCst) {
         if log_enabled!(Level::Trace) {
@@ -29,13 +35,15 @@ fn main() {
         thread::sleep(time::Duration::from_millis(20));
     }
 
-    // thread::sleep(time::Duration::from_secs(3));
-
-    let mut client = PoncuTcpClient::with_config(&config);
+    let client_config = config.clone();
+    let mut client = PoncuTcpClient::with_config(&client_config);
     client.connect().expect("client connection error");
 
-    let msg = String::from("Hi there!");
-    client.set_item(msg).expect("set item error");
+    let msg1 = String::from("Hi there1!");
+    client.set_item(msg1).expect("set item error");
+
+    let msg2 = String::from("Hi there2!");
+    client.set_item(msg2).expect("set item error");
 
     // shutdown the server
     // server_shutdown.store(false, Ordering::SeqCst);

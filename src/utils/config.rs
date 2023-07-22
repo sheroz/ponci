@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::net::{IpAddr, SocketAddr};
+use std::sync::Arc;
 
 #[derive(Debug)]
 pub struct Config {
@@ -17,7 +18,7 @@ pub struct Remote {
     pub nodes: Vec<SocketAddr>,
 }
 
-pub fn get_config() -> Config {
+pub fn get_config() -> Arc<Config> {
     let config_file = std::fs::File::open("config.yaml").expect("Could not open config file.");
     let config_map: HashMap<String, HashMap<String, String>> =
         serde_yaml::from_reader(config_file).expect("Could not parse config file.");
@@ -49,7 +50,7 @@ pub fn get_config() -> Config {
         log::trace!("parsed config:\n{:#?}", config);
     }
 
-    config
+    Arc::new(config)
 }
 
 fn parse_server(node: &HashMap<String, String>) -> Server {
