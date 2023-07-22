@@ -5,6 +5,7 @@ use std::net::{SocketAddr, TcpListener, TcpStream};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::io::prelude::*;
+use std::thread::{self, JoinHandle};
 
 pub trait TcpServer<'a> {
     fn with_config(config: &'a Config) -> Self;
@@ -79,11 +80,8 @@ impl<'a> TcpServer<'a> for PoncuTcpServer<'a> {
         assert!(!config_server.listen_on.is_empty());
         let socket_address = config_server.listen_on[0];
 
-        let signal_shutdown = shutdown.clone();
-        let signal_ready = ready.clone();
-
         let listener = TcpListener::bind(socket_address).unwrap();
-        signal_ready.store(true, Ordering::SeqCst);
+        ready.store(true, Ordering::SeqCst);
 
         log::info!("started listening on {} ...", socket_address);
         // listener.set_nonblocking(true).unwrap();
@@ -91,10 +89,16 @@ impl<'a> TcpServer<'a> for PoncuTcpServer<'a> {
         // using thread pooling
         // Final Project: Building a Multithreaded Web Server
         // https://doc.rust-lang.org/book/ch20-00-final-project-a-web-server.html
-
-        while !signal_shutdown.load(Ordering::SeqCst) {
+        let mut handles = Vec::<JoinHandle<()>>::new();
+        while !shutdown.load(Ordering::SeqCst) {
             match listener.accept() {
-                Ok((stream, addr)) => handle_connection(stream, addr, signal_shutdown.clone()),
+                Ok((stream, addr)) => {
+                    let connection_shutdown = shutdown.clone();
+                    let handle = thread::spawn(move|| {
+                        handle_connection(stream, addr, connection_shutdown)
+                    });
+                    handles.push(handle);
+                },
                 /*
                 Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
                     // wait until network socket is ready, typically implemented
@@ -106,6 +110,11 @@ impl<'a> TcpServer<'a> for PoncuTcpServer<'a> {
                 Err(e) => log::error!("couldn't get client: {e:?}"),
             }
         }
+
+        for handle in handles {
+            handle.join().unwrap();
+        }
+
     }
 
     fn stop() {}
@@ -123,7 +132,7 @@ impl<'a> TcpServer<'a> for PoncuTcpServer<'a> {
     }
 }
 
-fn handle_connection(mut stream: TcpStream, addr: SocketAddr, _shutdowm: Arc<AtomicBool>) {
+fn handle_connection(mut stream: TcpStream, addr: SocketAddr, shutdown: Arc<AtomicBool>) {
     log::debug!("client connected: {}", addr);
 /*
     use std::io::BufRead;
@@ -134,7 +143,7 @@ fn handle_connection(mut stream: TcpStream, addr: SocketAddr, _shutdowm: Arc<Ato
 
 */
     let mut buf = [0;1024];
-    loop {
+    while !shutdown.load(Ordering::SeqCst) {
         let count = stream.read(&mut buf).unwrap();
         log::debug!("received bytes count: {}", count);
         let mut vec = buf.to_vec();
