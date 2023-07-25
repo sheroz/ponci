@@ -33,6 +33,8 @@ impl<'a> TcpClient<'a> for PoncuTcpClient<'a> {
 
         let local_addr = stream.local_addr().unwrap();
         log::info!("connected to {} as {}", remote_address, local_addr);
+        
+        stream.set_nodelay(true).expect("set_nodelay call failed");
 
         self.stream = Some(stream);
         Ok(())
@@ -48,6 +50,7 @@ impl<'a> TcpClient<'a> for PoncuTcpClient<'a> {
     fn set_item(&mut self, key: String) -> std::io::Result<()> {
         let stream = self.stream.as_mut().unwrap();
         stream.write_all(key.as_bytes())?;
+        // stream.shutdown(std::net::Shutdown::Write).unwrap();
         stream.flush().unwrap();
         Ok(())
     }

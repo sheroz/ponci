@@ -144,11 +144,12 @@ fn handle_connection(mut stream: TcpStream, addr: SocketAddr, shutdown: Arc<Atom
 */
     let mut buf = [0;1024];
     while !shutdown.load(Ordering::SeqCst) {
+        let addr = stream.peer_addr().unwrap();
         let count = stream.read(&mut buf).unwrap();
-        log::debug!("received bytes count: {}", count);
+        log::debug!("received bytes count from {} : {}", addr, count);
         let mut vec = buf.to_vec();
         vec.truncate(count);
         let msg = String::from_utf8(vec).unwrap();
-        log::debug!("received message: {}", msg);
+        log::debug!("received message from {} : {}", addr, msg);
     }
 }

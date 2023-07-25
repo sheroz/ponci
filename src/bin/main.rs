@@ -1,4 +1,5 @@
 use core::time;
+use std::time::Duration;
 use log::{log_enabled, Level};
 use log4rs;
 use poncu::client::core::{PoncuTcpClient, TcpClient};
@@ -36,14 +37,23 @@ fn main() {
     }
 
     let client_config = config.clone();
-    let mut client = PoncuTcpClient::with_config(&client_config);
-    client.connect().expect("client connection error");
+    let mut client1 = PoncuTcpClient::with_config(&client_config);
+    client1.connect().expect("client connection error");
 
     let msg1 = String::from("Hi there1!");
-    client.set_item(msg1).expect("set item error");
-
+    client1.set_item(msg1).expect("set item error");
+    thread::sleep(Duration::from_millis(20));
     let msg2 = String::from("Hi there2!");
-    client.set_item(msg2).expect("set item error");
+    client1.set_item(msg2).expect("set item error");
+
+    let mut client2 = PoncuTcpClient::with_config(&client_config);
+    client2.connect().expect("client connection error");
+
+    let msg1 = String::from("Hi there1!");
+    client2.set_item(msg1).expect("set item error");
+    thread::sleep(Duration::from_millis(20));
+    let msg2 = String::from("Hi there2!");
+    client2.set_item(msg2).expect("set item error");
 
     // shutdown the server
     // server_shutdown.store(false, Ordering::SeqCst);
