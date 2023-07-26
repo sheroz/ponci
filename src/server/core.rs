@@ -1,4 +1,3 @@
-use crate::utils::config::Config;
 use log;
 use std::collections::HashMap;
 use std::net::{SocketAddr, TcpListener, TcpStream};
@@ -6,6 +5,9 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::io::prelude::*;
 use std::thread::{self, JoinHandle};
+
+use crate::utils::config::Config;
+use crate::server::items::storage::StorageItem;
 
 pub trait TcpServer<'a> {
     fn with_config(config: &'a Config) -> Self;
@@ -26,44 +28,6 @@ pub struct PoncuTcpServer<'a> {
 }
 
 pub type PoncuMutex <'a> = Arc<Mutex<&'a PoncuTcpServer <'a>> >;
-
-pub struct StorageItem {
-    _item_type: ItemComplexType,
-    _data: Box<Vec<u8>>,
-    _description: String,
-    _tags: Vec<String>,
-    _metadata: HashMap<String, String>,
-    _may_expire: bool,
-    _expires_on: std::time::Instant,
-    _storage: Vec<ItemStorageType>,
-    _redundancy: u8, // min number of required replications in the claster: 0,1,2, …
-}
-
-pub enum ItemComplexType {
-    Array(ItemBasicType),
-    Set(ItemBasicType),
-    Map(ItemBasicType, ItemBasicType),
-    Blob,
-    Json,
-    Xml,
-    File,
-    Folder,
-    Path,
-}
-
-pub enum ItemBasicType {
-    String,
-    Boolean,
-    SignedInteger(u8),
-    UnsignedInteger(u8),
-    Float(u8),
-}
-
-/// TBD
-pub enum ItemStorageType {
-    Memory, // default
-    Disk,
-}
 
 impl<'a> TcpServer<'a> for PoncuTcpServer<'a> {
     fn with_config(config: &'a Config) -> Self {

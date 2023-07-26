@@ -2,8 +2,8 @@ use core::time;
 use std::time::Duration;
 use log::{log_enabled, Level};
 use log4rs;
-use poncu::client::raw_core::{PoncuTcpClient, TcpClient};
-use poncu::server::raw_core::{PoncuTcpServer, TcpServer, PoncuMutex};
+use poncu::client::core::{PoncuTcpClient, TcpClient};
+use poncu::server::core::{PoncuTcpServer, TcpServer, PoncuMutex};
 use poncu::utils::config;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
@@ -57,6 +57,11 @@ fn main() {
 
     // shutdown the server
     // server_shutdown.store(false, Ordering::SeqCst);
+
+    // start file server
+    let handle_file_server = poncu::server::file_server::start_file_server();
+
+    let _ = handle_file_server.join();
     let _ = server_handle.join();
     log::info!("server closed.");
 }
