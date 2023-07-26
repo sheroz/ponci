@@ -14,6 +14,10 @@ server:
   disk_max: 2G
   disk_root: "/var/poncu"
 
+file_server:
+  listen_addresses: 127.0.0.1
+  listen_port: 8181
+
 # pool of remote server nodes
 remote:
   nodes: 127.0.0.1:9191

@@ -42,12 +42,12 @@ impl<'a> TcpServer<'a> for PoncuTcpServer<'a> {
         assert!(self.config.server.is_some());
         let config_server = self.config.server.as_ref().unwrap();
         assert!(!config_server.listen_on.is_empty());
-        let socket_address = config_server.listen_on[0];
+        let listen_on = config_server.listen_on[0];
 
-        let listener = TcpListener::bind(socket_address).unwrap();
+        let listener = TcpListener::bind(listen_on).unwrap();
         flag_ready.store(true, Ordering::SeqCst);
 
-        log::info!("started listening on {} ...", socket_address);
+        log::info!("started listening on {} ...", listen_on);
         // listener.set_nonblocking(true).unwrap();
 
         // using thread pooling

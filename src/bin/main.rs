@@ -59,7 +59,8 @@ fn main() {
     // server_shutdown.store(false, Ordering::SeqCst);
 
     // start file server
-    let handle_file_server = poncu::server::file_server::start_file_server();
+    let file_server_config = config.clone();
+    let handle_file_server = poncu::server::file_server::start_file_server(&file_server_config);
 
     let _ = handle_file_server.join();
     let _ = server_handle.join();

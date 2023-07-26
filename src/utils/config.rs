@@ -5,11 +5,17 @@ use std::sync::Arc;
 #[derive(Debug)]
 pub struct Config {
     pub server: Option<Server>,
+    pub file_server: Option<FileServer>,
     pub remote: Option<Remote>,
 }
 
 #[derive(Debug)]
 pub struct Server {
+    pub listen_on: Vec<SocketAddr>,
+}
+
+#[derive(Debug)]
+pub struct FileServer {
     pub listen_on: Vec<SocketAddr>,
 }
 
@@ -29,14 +35,22 @@ pub fn get_config() -> Arc<Config> {
 
     let mut config = Config {
         server: None,
+        file_server: None,
         remote: None,
     };
 
     let map_key = "server";
     if config_map.contains_key(map_key) {
         let config_node = &config_map[map_key];
-        let server = parse_server(config_node);
-        config.server = Some(server);
+        let listen_on = parse_listen_on(config_node);
+        config.server = Some(Server{listen_on});
+    }
+
+    let map_key = "file_server";
+    if config_map.contains_key(map_key) {
+        let config_node = &config_map[map_key];
+        let listen_on = parse_listen_on(config_node);
+        config.file_server = Some(FileServer{listen_on});
     }
 
     let map_key = "remote";
@@ -53,7 +67,7 @@ pub fn get_config() -> Arc<Config> {
     Arc::new(config)
 }
 
-fn parse_server(node: &HashMap<String, String>) -> Server {
+fn parse_listen_on(node: &HashMap<String, String>) -> Vec::<SocketAddr> {
     let node_key = "listen_addresses";
     let listen_addresses: Vec<_>;
     if node.contains_key(node_key) {
@@ -90,7 +104,7 @@ fn parse_server(node: &HashMap<String, String>) -> Server {
         log::trace!("parsed: listen_on: {:?}", listen_on);
     }
 
-    Server { listen_on }
+    listen_on
 }
 
 fn parse_remote(node: &HashMap<String, String>) -> Remote {

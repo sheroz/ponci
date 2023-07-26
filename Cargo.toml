@@ -20,6 +20,7 @@ serde_yaml = "0.9"
 hyper = { version = "0.14", features = ["full"] }
 tokio = { version = "1", features = ["full"] }
 tokio-util = "0.7"
+http = "0.2"
 
 [dev-dependencies]
 criterion = "0.5"
