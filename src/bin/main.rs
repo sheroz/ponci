@@ -2,8 +2,8 @@ use core::time;
 use std::time::Duration;
 use log::{log_enabled, Level};
 use log4rs;
-use poncu::client::core::{PoncuTcpClient, TcpClient};
-use poncu::server::core::{PoncuTcpServer, TcpServer, PoncuMutex};
+use poncu::client::raw_core::{PoncuTcpClient, TcpClient};
+use poncu::server::raw_core::{PoncuTcpServer, TcpServer, PoncuMutex};
 use poncu::utils::config;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
@@ -16,20 +16,20 @@ fn main() {
 
     let config = config::get_config();
 
-    let server_ready = Arc::new(AtomicBool::new(false));
-    let server_shutdown = Arc::new(AtomicBool::new(false));
+    let flag_server_ready = Arc::new(AtomicBool::new(false));
+    let flag_server_shutdown = Arc::new(AtomicBool::new(false));
 
-    let signal_ready = server_ready.clone();
-    let signal_shutdown = server_shutdown.clone();
+    let flag_server_ready_worker = flag_server_ready.clone();
+    let flag_server_shutdown_worker = flag_server_shutdown.clone();
 
     let server_config = config.clone();
     let server_handle = thread::spawn(move || {
         let server = PoncuTcpServer::with_config(&server_config);
         let _poncu_mutex: PoncuMutex = Arc::new(Mutex::new(&server));
-        server.start(&signal_shutdown, &signal_ready);
+        server.start(&flag_server_shutdown_worker, &flag_server_ready_worker);
     });
 
-    while !server_ready.load(Ordering::SeqCst) {
+    while !flag_server_ready.load(Ordering::SeqCst) {
         if log_enabled!(Level::Trace) {
             log::trace!("server not ready yet, wait...");
         }

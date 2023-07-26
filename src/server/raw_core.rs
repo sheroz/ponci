@@ -73,7 +73,7 @@ impl<'a> TcpServer<'a> for PoncuTcpServer<'a> {
         }
     }
 
-    fn start(&self, shutdown: &Arc<AtomicBool>, ready: &Arc<AtomicBool>) {
+    fn start(&self, flag_shutdown: &Arc<AtomicBool>, flag_ready: &Arc<AtomicBool>) {
 
         assert!(self.config.server.is_some());
         let config_server = self.config.server.as_ref().unwrap();
@@ -81,7 +81,7 @@ impl<'a> TcpServer<'a> for PoncuTcpServer<'a> {
         let socket_address = config_server.listen_on[0];
 
         let listener = TcpListener::bind(socket_address).unwrap();
-        ready.store(true, Ordering::SeqCst);
+        flag_ready.store(true, Ordering::SeqCst);
 
         log::info!("started listening on {} ...", socket_address);
         // listener.set_nonblocking(true).unwrap();
@@ -90,10 +90,10 @@ impl<'a> TcpServer<'a> for PoncuTcpServer<'a> {
         // Final Project: Building a Multithreaded Web Server
         // https://doc.rust-lang.org/book/ch20-00-final-project-a-web-server.html
         let mut handles = Vec::<JoinHandle<()>>::new();
-        while !shutdown.load(Ordering::SeqCst) {
+        while !flag_shutdown.load(Ordering::SeqCst) {
             match listener.accept() {
                 Ok((stream, addr)) => {
-                    let connection_shutdown = shutdown.clone();
+                    let connection_shutdown = flag_shutdown.clone();
                     let handle = thread::spawn(move|| {
                         handle_connection(stream, addr, connection_shutdown)
                     });
@@ -132,19 +132,11 @@ impl<'a> TcpServer<'a> for PoncuTcpServer<'a> {
     }
 }
 
-fn handle_connection(mut stream: TcpStream, addr: SocketAddr, shutdown: Arc<AtomicBool>) {
+fn handle_connection(mut stream: TcpStream, addr: SocketAddr, flag_shutdown: Arc<AtomicBool>) {
     log::debug!("client connected: {}", addr);
-/*
-    use std::io::BufRead;
-    let mut reader = BufReader::new(stream);
-    let mut msg = String::new();
-    reader.read_line(&mut msg).unwrap();
-    log::debug!("received message: {}", msg);
-
-*/
     let mut buf = [0;1024];
     let addr = stream.peer_addr().unwrap();
-    while !shutdown.load(Ordering::SeqCst) {
+    while !flag_shutdown.load(Ordering::SeqCst) {
         let count = stream.read(&mut buf).unwrap();
         log::debug!("received bytes count from {} : {}", addr, count);
         let mut vec = buf.to_vec();

@@ -1,7 +1,7 @@
 use core::time;
 use log::{log_enabled, Level};
 use log4rs;
-use poncu::server::core::{PoncuTcpServer, TcpServer};
+use poncu::server::raw_core::{PoncuTcpServer, TcpServer};
 use poncu::utils::config;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
@@ -19,11 +19,11 @@ fn main() {
     let config = config::get_config();
     let server = PoncuTcpServer::with_config(&config);
 
-    let server_ready = Arc::new(AtomicBool::new(false));
-    let server_shutdown = Arc::new(AtomicBool::new(false));
-    server.start(&server_shutdown, &server_ready);
+    let flag_server_ready = Arc::new(AtomicBool::new(false));
+    let flag_server_shutdown = Arc::new(AtomicBool::new(false));
+    server.start(&flag_server_shutdown, &flag_server_ready);
 
-    while !server_ready.load(Ordering::SeqCst) {
+    while !flag_server_ready.load(Ordering::SeqCst) {
         if log_enabled!(Level::Trace) {
             log::trace!("server not ready yet, wait...");
         }

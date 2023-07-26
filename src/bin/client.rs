@@ -1,6 +1,6 @@
 use log;
 use log4rs;
-use poncu::client::core::{PoncuTcpClient, TcpClient};
+use poncu::client::raw_core::{PoncuTcpClient, TcpClient};
 use poncu::utils::config;
 
 fn main() {
