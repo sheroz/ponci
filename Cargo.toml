@@ -9,6 +9,7 @@ readme = "README.md"
 repository = "https://github.com/sheroz/poncu"
 license = "MIT"
 keywords = ["storage", "cache", "file-server"]
+categories = ["data-structures", "caching", "database", "filesystem"]
 default-run = "main"
 
 [dependencies]
