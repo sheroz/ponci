@@ -4,6 +4,16 @@ appenders:
         encoder:
             pattern: "{d(%+)(utc)} [{f}:{L}] {h({l})} {m}{n}"
 root:
-    level: trace
+    level: info
     appenders:
         - stdout
+
+loggers:
+    poncu::server:
+        level: trace
+
+    poncu::client:
+        level: trace
+
+    poncu::utils::config:
+        level: info

@@ -3,6 +3,7 @@ use std::time::Duration;
 use log::{log_enabled, Level};
 use log4rs;
 use poncu::client::core::{PoncuTcpClient, TcpClient};
+use poncu::client::file_client;
 use poncu::server::core::{PoncuTcpServer, TcpServer, PoncuMutex};
 use poncu::utils::config;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -16,22 +17,22 @@ fn main() {
 
     let config = config::get_config();
 
-    let flag_server_ready = Arc::new(AtomicBool::new(false));
-    let flag_server_shutdown = Arc::new(AtomicBool::new(false));
+    let flag_tcp_server_ready = Arc::new(AtomicBool::new(false));
+    let flag_tcp_server_shutdown = Arc::new(AtomicBool::new(false));
 
-    let flag_server_ready_worker = flag_server_ready.clone();
-    let flag_server_shutdown_worker = flag_server_shutdown.clone();
+    let flag_tcp_server_ready_worker = flag_tcp_server_ready.clone();
+    let flag_tcp_server_shutdown_worker = flag_tcp_server_shutdown.clone();
 
     let server_config = config.clone();
-    let server_handle = thread::spawn(move || {
+    let handle_tcp_server = thread::spawn(move || {
         let server = PoncuTcpServer::with_config(&server_config);
         let _poncu_mutex: PoncuMutex = Arc::new(Mutex::new(&server));
-        server.start(&flag_server_shutdown_worker, &flag_server_ready_worker);
+        server.start(&flag_tcp_server_shutdown_worker, &flag_tcp_server_ready_worker);
     });
 
-    while !flag_server_ready.load(Ordering::SeqCst) {
+    while !flag_tcp_server_ready.load(Ordering::SeqCst) {
         if log_enabled!(Level::Trace) {
-            log::trace!("server not ready yet, wait...");
+            log::trace!("socket server not ready yet, wait...");
         }
         thread::sleep(time::Duration::from_millis(20));
     }
@@ -60,9 +61,21 @@ fn main() {
 
     // start file server
     let file_server_config = config.clone();
-    let handle_file_server = poncu::server::file_server::start_file_server(&file_server_config);
+    let flag_file_server_ready = Arc::new(AtomicBool::new(false));
+    let flag_file_server_shutdown = Arc::new(AtomicBool::new(false));
+
+    let handle_file_server = poncu::server::file_server::start_file_server(&file_server_config, flag_file_server_ready.clone(), flag_file_server_shutdown.clone());
+
+    while !flag_file_server_ready.load(Ordering::SeqCst) {
+        if log_enabled!(Level::Trace) {
+            log::trace!("File server not ready yet, wait...");
+        }
+        thread::sleep(time::Duration::from_millis(20));
+    }
+
+    file_client::get_file_info("http://127.0.0.1:8181/LICENSE");
 
     let _ = handle_file_server.join();
-    let _ = server_handle.join();
+    let _ = handle_tcp_server.join();
     log::info!("server closed.");
 }
