@@ -19,12 +19,12 @@ pub fn parse(range_value: &str, bytes_count: u64) -> Option<Vec<Range<u64>>> {
         log::error!("Invalid range unit: {}", parts[0]);
         return None;
     }
-    let mut result = Vec::<Range<u64>>::new();
 
     if parts.len() != 2 {
         log::error!("Invalid range: {}", range_value);
         return None;
     }
+    let mut ranges = Vec::<Range<u64>>::new();
 
     let params = parts[1].split(",");
     for param in params {
@@ -50,10 +50,31 @@ pub fn parse(range_value: &str, bytes_count: u64) -> Option<Vec<Range<u64>>> {
             range.start = u64::from_str_radix(start, 10).unwrap();
         }
 
-        result.push(range);
+        ranges.push(range);
     }
 
-    Some(result)
+    ranges.sort_by(|a,b| a.start.cmp(&b.start));
+
+    let range_count = ranges.len();
+    if range_count > 1 {
+        // merge continuous and overlapping ranges
+        let last = range_count - 1;
+        let mut updated = Vec::<Range<u64>>::new();
+        let mut range_last = ranges[0].clone();
+        for (index, range) in ranges.iter().enumerate() {
+            if (range_last.end + 1) >= range.start {
+                range_last.end = range.end;     
+                if index < last {
+                    continue;
+                }
+            }
+            updated.push(range_last);
+            range_last = range.clone();
+        }
+        ranges = updated;
+    }
+    
+    Some(ranges)
 }
 
 #[cfg(test)]
@@ -121,7 +142,26 @@ mod tests {
 
     #[test]
     fn test7() {
+        let range = parse("bytes=601-999,500-600", 10000);
+        assert_eq!(range.unwrap(), vec![500..999]);
+    }
+
+    #[test]
+    fn test8() {
         let range = parse("bytes=500-700,601-999", 10000);
         assert_eq!(range.unwrap(), vec![500..999]);
     }
+
+    #[test]
+    fn test9() {
+        let range = parse("bytes=601-999,500-700", 10000);
+        assert_eq!(range.unwrap(), vec![500..999]);
+    }
+
+    #[test]
+    fn test10() {
+        let range = parse("bytes=300-400,400-700,601-999", 10000);
+        assert_eq!(range.unwrap(), vec![300..999]);
+    }
+
 }
