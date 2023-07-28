@@ -20,6 +20,9 @@ use log;
 
 use crate::utils::config::Config;
 
+// A simple type alias so as to DRY.
+type MyResult<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
+
 pub fn start_file_server(config: &Config, flag_ready: Arc<AtomicBool>, flag_shutdown: Arc<AtomicBool>) -> JoinHandle<()> {
     assert!(config.file_server.is_some());
     let file_server_config = config.file_server.as_ref().unwrap();
@@ -99,28 +102,37 @@ async fn file_info(req: &Request<hyper::body::Incoming>) -> Result<Response<Full
         log::debug!("recevied request {}, filename:{}", req.method(), filename);
     }
 
-    if let Ok(file) = tokio::fs::File::open(filename).await {
-        if let Ok(metadata) = file.metadata().await {
-            if metadata.is_file() {
-                let file_len = metadata.len();
-
-                let response = Response::builder()
-                    .status(StatusCode::OK)
-                    .header(hyper::header::ACCEPT_RANGES, http_range::BYTES_UNIT)
-                    .header(hyper::header::CONTENT_LENGTH, file_len)
-                    .body(Full::new(Bytes::new()))
-                    .expect("unable to build response");
-
-                if log::log_enabled!(log::Level::Trace) {
-                    log::trace!("response:{:#?}", response);
-                }
-
-                return Ok(response);
+    match get_file_len(&filename).await {
+        Ok(file_len) => {
+            let response = Response::builder()
+            .status(StatusCode::OK)
+            .header(hyper::header::ACCEPT_RANGES, http_range::RANGE_UNIT)
+            .header(hyper::header::CONTENT_LENGTH, file_len)
+            .body(Full::new(Bytes::new()))
+            .expect("unable to build response");
+        
+            if log::log_enabled!(log::Level::Trace) {
+                log::trace!("response:{:#?}", response);
             }
+            Ok(response)
+        }
+        Err(_err) => {
+            Ok(not_found())
         }
     }
 
-    Ok(not_found())
+}
+
+async fn get_file_len(filename: &str) -> MyResult<u64>{
+    let file  = tokio::fs::File::open(filename).await?;
+    let metadata = file.metadata().await?;
+    if metadata.is_file() {
+        let file_len = metadata.len();
+        return Ok(file_len);
+    }
+    let err_msg = format!("Not a file: {}", filename);
+    log::error!("{err_msg}");
+    Err(err_msg.into())
 }
 
 async fn file_send(req: &Request<hyper::body::Incoming>) -> Result<Response<Full<Bytes>>> {
@@ -141,7 +153,12 @@ async fn file_send(req: &Request<hyper::body::Incoming>) -> Result<Response<Full
     let headers = req.headers();
     if headers.contains_key(hyper::header::CONTENT_RANGE) {
         let content_range = headers.get(hyper::header::CONTENT_RANGE).unwrap();
-        http_range::parse(content_range.to_str().unwrap());
+        let _file_len = get_file_len(&filename).await;
+        if let Ok(file_len) = _file_len {
+            http_range::parse(content_range.to_str().unwrap(), file_len);
+        } else {
+            return Ok(not_found());
+        }
     }
 
     if let Ok(contents) = tokio::fs::read(filename).await {
@@ -151,7 +168,7 @@ async fn file_send(req: &Request<hyper::body::Incoming>) -> Result<Response<Full
         let headers = response.headers_mut();
         headers.insert(
             hyper::header::ACCEPT_RANGES,
-            HeaderValue::from_bytes(http_range::BYTES_UNIT).unwrap(),
+            HeaderValue::from_str(http_range::RANGE_UNIT).unwrap(),
         );
 
         return Ok(response);
