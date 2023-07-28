@@ -14,12 +14,11 @@ use hyper_util::rt::TokioIo;
 use bytes::Bytes;
 use http::HeaderValue;
 use http_body_util::Full;
+use crate::utils::http_range;
 
 use log;
 
 use crate::utils::config::Config;
-
-static ACCEPT_RANGES_BYTES: &str = "bytes";
 
 pub fn start_file_server(config: &Config, flag_ready: Arc<AtomicBool>, flag_shutdown: Arc<AtomicBool>) -> JoinHandle<()> {
     assert!(config.file_server.is_some());
@@ -107,7 +106,7 @@ async fn file_info(req: &Request<hyper::body::Incoming>) -> Result<Response<Full
 
                 let response = Response::builder()
                     .status(StatusCode::OK)
-                    .header(hyper::header::ACCEPT_RANGES,ACCEPT_RANGES_BYTES)
+                    .header(hyper::header::ACCEPT_RANGES, http_range::BYTES_UNIT)
                     .header(hyper::header::CONTENT_LENGTH, file_len)
                     .body(Full::new(Bytes::new()))
                     .expect("unable to build response");
@@ -139,6 +138,12 @@ async fn file_send(req: &Request<hyper::body::Incoming>) -> Result<Response<Full
         log::debug!("recevied request {}, filename:{}", req.method(), filename);
     }
 
+    let headers = req.headers();
+    if headers.contains_key(hyper::header::CONTENT_RANGE) {
+        let content_range = headers.get(hyper::header::CONTENT_RANGE).unwrap();
+        http_range::parse(content_range.to_str().unwrap());
+    }
+
     if let Ok(contents) = tokio::fs::read(filename).await {
         let body = contents.into();
         let mut response = Response::new(Full::new(body));
@@ -146,7 +151,7 @@ async fn file_send(req: &Request<hyper::body::Incoming>) -> Result<Response<Full
         let headers = response.headers_mut();
         headers.insert(
             hyper::header::ACCEPT_RANGES,
-            HeaderValue::from_str(ACCEPT_RANGES_BYTES).unwrap(),
+            HeaderValue::from_bytes(http_range::BYTES_UNIT).unwrap(),
         );
 
         return Ok(response);
