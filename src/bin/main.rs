@@ -1,4 +1,5 @@
 use core::time;
+use std::ops::Range;
 use std::time::Duration;
 use log::{log_enabled, Level};
 use log4rs;
@@ -74,6 +75,10 @@ fn main() {
     }
 
     file_client::get_file_info("http://127.0.0.1:8181/LICENSE");
+    file_client::get_file("http://127.0.0.1:8181/LICENSE");
+
+    let range = 10..100;
+    file_client::get_file_in_range("http://127.0.0.1:8181/LICENSE", Some(range));
 
     let _ = handle_file_server.join();
     let _ = handle_tcp_server.join();

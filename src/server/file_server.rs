@@ -154,3 +154,13 @@ async fn file_send(req: &Request<hyper::body::Incoming>) -> Result<Response<Full
 
     Ok(not_found())
 }
+
+/*
+
+https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Range
+
+Content-Range: <unit> <range-start>-<range-end>/<size>
+Content-Range: <unit> <range-start>-<range-end>/*
+Content-Range: <unit> */<size>
+
+*/

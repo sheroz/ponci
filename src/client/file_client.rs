@@ -1,3 +1,5 @@
+use std::ops::Range;
+
 use bytes::Bytes;
 use http_body_util::{BodyExt, Empty};
 use hyper::Request;
@@ -11,11 +13,15 @@ use hyper_util::rt::TokioIo;
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
 pub fn get_file(url: &str) {
+    get_file_in_range(url, None)
+}
+
+pub fn get_file_in_range(url: &str, range: Option<Range<u64>>) {
     let url = url.parse::<hyper::Uri>().unwrap();
 
     let async_runtime = Runtime::new().unwrap();
     async_runtime.block_on(async {
-        let result = request_url("GET", url).await;
+        let result = request_url("GET", url, range).await;
         match result {
             Err(err) =>  {
                 log::error!("Connection failed: {:?}", err);
@@ -30,7 +36,7 @@ pub fn get_file_info(url: &str) {
 
     let async_runtime = Runtime::new().unwrap();
     async_runtime.block_on(async {
-        let result = request_url("HEAD", url).await;
+        let result = request_url("HEAD", url, None).await;
         match result {
             Err(err) =>  {
                 log::error!("Connection failed: {:?}", err);
@@ -40,7 +46,8 @@ pub fn get_file_info(url: &str) {
     });
 }
 
-async fn request_url(method: &str, url: hyper::Uri) -> Result<()> {
+async fn request_url(method: &str, url: hyper::Uri, range: Option<Range<u64>>) -> Result<()> {
+
     let host = url.host().expect("uri has no host");
     let port = url.port_u16().unwrap_or(80);
     let addr = format!("{}:{}", host, port);
@@ -60,11 +67,16 @@ async fn request_url(method: &str, url: hyper::Uri) -> Result<()> {
 
     let authority = url.authority().unwrap().clone();
 
-    let req = Request::builder()
+    let mut req = Request::builder()
         .uri(url)
         .method(method)
         .header(hyper::header::HOST, authority.as_str())
         .body(Empty::<Bytes>::new())?;
+    
+    if let Some(range_v) = range {
+       let range_value = format!("bytes {}-{}/*", range_v.start, range_v.end);
+       req.headers_mut().append(hyper::header::CONTENT_RANGE, range_value.parse().unwrap()); 
+    }
 
     if log::log_enabled!(log::Level::Trace) {
         log::trace!("Request:\n{:#?}", req);
@@ -73,8 +85,8 @@ async fn request_url(method: &str, url: hyper::Uri) -> Result<()> {
     let mut res = sender.send_request(req).await?;
 
     if log::log_enabled!(log::Level::Trace) {
-        log::trace!("Response: {}", res.status());
-        log::trace!("Headers:\n{:#?}", res.headers());
+        log::trace!("Response status: {}", res.status());
+        log::trace!("Response headers:\n{:#?}", res.headers());
     }
 
     // Stream the body, writing each chunk to stdout as we get it
