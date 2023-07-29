@@ -17,7 +17,6 @@ use hyper_util::rt::TokioIo;
 
 use crate::utils::http_range;
 use bytes::Bytes;
-use http::HeaderValue;
 use http_body_util::Full;
 
 use log;
@@ -85,18 +84,24 @@ async fn file_service(req: Request<hyper::body::Incoming>) -> Result<Response<Fu
 
 /// HTTP status code 404
 fn not_found() -> Response<Full<Bytes>> {
-    Response::builder()
-        .status(StatusCode::NOT_FOUND)
-        .body(Full::new(Bytes::new()))
-        .expect("unable to build 404 response")
+    blank_response(StatusCode::NOT_FOUND)
 }
 
 /// HTTP status code 403
 fn forbidden() -> Response<Full<Bytes>> {
-    Response::builder()
-        .status(StatusCode::FORBIDDEN)
-        .body(Full::new(Bytes::new()))
-        .expect("unable to build 403 response")
+    blank_response(StatusCode::FORBIDDEN)
+}
+
+/// HTTP status code 500
+fn internal_server_error() -> Response<Full<Bytes>> {
+    blank_response(StatusCode::INTERNAL_SERVER_ERROR)
+}
+
+/// A blank response with status code
+fn blank_response(status_code: StatusCode) -> Response<Full<Bytes>> {
+    let mut response = Response::<Full<Bytes>>::new(Full::new(Bytes::new()));
+    *response.status_mut() = status_code;
+    response
 }
 
 async fn file_info(req: &Request<hyper::body::Incoming>) -> Result<Response<Full<Bytes>>> {
@@ -106,6 +111,7 @@ async fn file_info(req: &Request<hyper::body::Incoming>) -> Result<Response<Full
 
     let filename = req.uri().path().replace("/", "");
     if filename.is_empty() {
+        log::error!("filename is empty");
         return Ok(forbidden());
     }
 
@@ -115,19 +121,25 @@ async fn file_info(req: &Request<hyper::body::Incoming>) -> Result<Response<Full
 
     match get_file_len(&filename).await {
         Ok(file_len) => {
-            let response = Response::builder()
+            if let Ok(response) = Response::builder()
                 .status(StatusCode::OK)
                 .header(hyper::header::ACCEPT_RANGES, http_range::RANGE_UNIT)
                 .header(hyper::header::CONTENT_LENGTH, file_len)
                 .body(Full::new(Bytes::new()))
-                .expect("unable to build response");
-
-            if log::log_enabled!(log::Level::Trace) {
-                log::trace!("response:{:#?}", response);
+            {
+                if log::log_enabled!(log::Level::Trace) {
+                    log::trace!("response:{:#?}", response);
+                }
+                Ok(response)
+            } else {
+                log::error!("unable to build response");
+                Ok(internal_server_error())
             }
-            Ok(response)
         }
-        Err(_err) => Ok(not_found()),
+        Err(_err) => {
+            log::error!("file not found: {}", filename);
+            Ok(not_found())
+        }
     }
 }
 
@@ -157,6 +169,7 @@ async fn file_send(req: &Request<hyper::body::Incoming>) -> Result<Response<Full
 
     let filename = req.uri().path().replace("/", "");
     if filename.is_empty() {
+        log::error!("filename is empty");
         return Ok(forbidden());
     }
 
@@ -177,21 +190,23 @@ async fn file_send(req: &Request<hyper::body::Incoming>) -> Result<Response<Full
                 ranges = _ranges.unwrap();
             }
         } else {
+            log::error!("file not found: {}", filename);
             return Ok(not_found());
         }
     }
     if ranges.is_empty() {
         if let Ok(contents) = tokio::fs::read(&filename).await {
             let body = contents.into();
-            let mut response = Response::new(Full::new(body));
-
-            let headers = response.headers_mut();
-            headers.insert(
-                hyper::header::ACCEPT_RANGES,
-                HeaderValue::from_str(http_range::RANGE_UNIT).unwrap(),
-            );
-
-            return Ok(response);
+            if let Ok(response) = Response::builder()
+                .status(StatusCode::OK)
+                .header(hyper::header::ACCEPT_RANGES, http_range::RANGE_UNIT)
+                .body(Full::new(body))
+            {
+                return Ok(response);
+            } else {
+                log::error!("unable to build response");
+                return Ok(internal_server_error());
+            }
         }
     } else {
         for range in ranges {
@@ -230,6 +245,7 @@ async fn file_send(req: &Request<hyper::body::Incoming>) -> Result<Response<Full
                             return Ok(response);
                         } else {
                             log::error!("unable to build response");
+                            return Ok(internal_server_error());
                         }
                     } else {
                         log::error!("could not read bytes from file");
@@ -243,5 +259,6 @@ async fn file_send(req: &Request<hyper::body::Incoming>) -> Result<Response<Full
         }
     }
 
+    log::error!("file not found: {}", filename);
     Ok(not_found())
 }
