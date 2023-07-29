@@ -177,13 +177,13 @@ async fn file_send(req: &Request<hyper::body::Incoming>) -> Result<Response<Full
         log::debug!("recevied request {}, filename:{}", req.method(), filename);
     }
 
-    let mut content_total_len = 0;
+    let mut content_size = 0;
     let mut ranges: Vec<Range<u64>> = vec![];
     let headers = req.headers();
     if headers.contains_key(hyper::header::CONTENT_RANGE) {
         let _file_len = get_file_len(&filename).await;
         if let Ok(file_len) = _file_len {
-            content_total_len = file_len;
+            content_size = file_len;
             let content_range = headers.get(hyper::header::CONTENT_RANGE).unwrap();
             let _ranges = http_range::parse(content_range.to_str().unwrap(), file_len);
             if _ranges.is_some() {
@@ -216,6 +216,34 @@ async fn file_send(req: &Request<hyper::body::Incoming>) -> Result<Response<Full
                 log::trace!("capacity {}", capacity);
             }
 
+            if range.start > content_size {
+
+                // 416 Range Not Satisfiable
+                // https://datatracker.ietf.org/doc/html/rfc7233#section-4.4
+
+                if let Ok(response) = Response::builder()
+                    .status(StatusCode::RANGE_NOT_SATISFIABLE)
+                    .header(hyper::header::ACCEPT_RANGES, http_range::RANGE_UNIT)
+                    .header(
+                        hyper::header::CONTENT_RANGE,
+                        format!(
+                            "{} */{}",
+                            http_range::RANGE_UNIT,
+                            content_size
+                        ),
+                    )
+                    .body(Full::new(Bytes::new()))
+                {
+                    if log::log_enabled!(log::Level::Debug) {
+                        log::debug!("Range Not Satisfiable (416). Requested range is greater than existing content, {} > {}", range.start, content_size);
+                    }
+                    return Ok(response);
+                } else {
+                    log::error!("unable to build response");
+                    return Ok(internal_server_error());
+                }
+            }
+
             let mut buffer = vec![0; capacity];
             if let Ok(mut file) = tokio::fs::File::open(&filename).await {
                 if let Ok(_seek) = file.seek(SeekFrom::Start(range.start)).await {
@@ -237,7 +265,7 @@ async fn file_send(req: &Request<hyper::body::Incoming>) -> Result<Response<Full
                                     http_range::RANGE_UNIT,
                                     range.start,
                                     range.end,
-                                    content_total_len
+                                    content_size
                                 ),
                             )
                             .body(Full::new(body))

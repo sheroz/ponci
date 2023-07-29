@@ -79,6 +79,9 @@ fn main() {
     let range = 100..299;
     file_client::get_file_in_range("http://127.0.0.1:8181/LICENSE", Some(range));
 
+    let range = 2000..2100;
+    file_client::get_file_in_range("http://127.0.0.1:8181/LICENSE", Some(range));
+
     let _ = handle_file_server.join();
     let _ = handle_tcp_server.join();
     log::info!("server closed.");
