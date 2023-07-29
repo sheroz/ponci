@@ -123,7 +123,7 @@ pub fn parse(range_value: &str, bytes_count: u64) -> Option<HttpRange> {
     Some(http_range)
 }
 
-pub fn is_range_satisfiable(http_range: HttpRange, content_length: u64 ) -> bool {
+pub fn is_range_satisfiable(http_range: &HttpRange, content_length: u64 ) -> bool {
     false
 }
 
