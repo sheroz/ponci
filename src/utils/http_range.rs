@@ -1,5 +1,11 @@
-//! https://datatracker.ietf.org/doc/html/rfc7233
+//! Implemented according to: Hypertext Transfer Protocol (HTTP/1.1): Range Requests
+//! 
+//! [RFC7233](https://datatracker.ietf.org/doc/html/rfc7233)
+//! 
+//! Additional resources:
+//! 
 //! https://developer.mozilla.org/en-US/docs/Web/HTTP/Range_requests
+//! 
 //! https://http.dev/range-request
 
 use std::ops::Range;
@@ -73,7 +79,7 @@ pub fn parse(range_value: &str, bytes_count: u64) -> Option<Vec<Range<u64>>> {
             range_last = range.clone();
         }
 
-        // remove merged ranges
+        // clean-up merged ranges
         let mut index = 0;
         ranges.retain(|_|{let keep = retain[index]; index += 1; keep});
     }
