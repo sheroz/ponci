@@ -55,55 +55,50 @@ pub fn parse(range_value: &str, bytes_count: u64) -> Option<Vec<Range<u64>>> {
 
     ranges.sort_by(|a,b| a.start.cmp(&b.start));
 
-    let range_count = ranges.len();
-    if range_count > 1 {
+    let ranges_count = ranges.len();
+    if ranges_count > 1 {
         // merge continuous and overlapping ranges
-        let last = range_count - 1;
-        let mut updated = Vec::<Range<u64>>::new();
+        let mut retain =vec![true; ranges_count];
         let mut range_last = ranges[0].clone();
-        for (index, range) in ranges.iter().enumerate() {
-            if (range_last.end + 1) >= range.start {
-                range_last.end = range.end;     
-                if index < last {
-                    continue;
-                }
+        for (index, range) in ranges.iter_mut().enumerate() {
+            if index != 0 && (range_last.end + 1) >= range.start {
+                range.start = range_last.start;     
+                retain[index - 1] = false;
             }
-            updated.push(range_last);
             range_last = range.clone();
         }
-        ranges = updated;
+
+        // remove merged ranges
+        let mut index = 0;
+        ranges.retain(|_|{let keep = retain[index]; index += 1; keep});
     }
-    
+
     Some(ranges)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    /*
+    /// https://datatracker.ietf.org/doc/html/rfc7233#section-4.2
+    /// 
+    /// Examples of byte-ranges-specifier values:
+    ///    -  The first 500 bytes (byte offsets 0-499, inclusive):
+    ///        bytes=0-499
+    ///    -  The second 500 bytes (byte offsets 500-999, inclusive):
+    ///         bytes=500-999
+    /// 
+    /// Additional examples, assuming a representation of length 10000:
+    ///    The final 500 bytes (byte offsets 9500-9999, inclusive):
+    ///         bytes=-500
+    ///    Or:
+    ///         bytes=9500-
+    ///    -  The first and last bytes only (bytes 0 and 9999):
+    ///         bytes=0-0,-1
+    ///    -  Other valid (but not canonical) specifications of the second 500
+    ///       bytes (byte offsets 500-999, inclusive):
+    ///         bytes=500-600,601-999
+    ///         bytes=500-700,601-999
 
-    Examples of byte-ranges-specifier values:
-
-       o  The first 500 bytes (byte offsets 0-499, inclusive):
-            bytes=0-499
-       o  The second 500 bytes (byte offsets 500-999, inclusive):
-            bytes=500-999
-
-    Additional examples, assuming a representation of length 10000:
-       The final 500 bytes (byte offsets 9500-9999, inclusive):
-            bytes=-500
-       Or:
-            bytes=9500-
-
-       o  The first and last bytes only (bytes 0 and 9999):
-            bytes=0-0,-1
-
-       o  Other valid (but not canonical) specifications of the second 500
-          bytes (byte offsets 500-999, inclusive):
-            bytes=500-600,601-999
-            bytes=500-700,601-999
-
-    */
     #[test]
     fn test1() {
         let range = parse("bytes=0-499", 10000);

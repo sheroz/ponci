@@ -1,5 +1,4 @@
 use core::time;
-use std::ops::Range;
 use std::time::Duration;
 use log::{log_enabled, Level};
 use log4rs;
