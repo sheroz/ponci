@@ -188,9 +188,9 @@ async fn file_send(req: &Request<hyper::body::Incoming>) -> Result<Response<Full
         if let Ok(file_len) = _file_len {
             content_size = file_len;
             let content_range = headers.get(hyper::header::CONTENT_RANGE).unwrap();
-            let _ranges = http_range::parse(content_range.to_str().unwrap(), file_len);
-            if _ranges.is_some() {
-                ranges = _ranges.unwrap();
+            let http_range = http_range::parse(content_range.to_str().unwrap(), file_len);
+            if http_range.is_some() {
+                ranges = http_range.unwrap().ranges;
             }
         } else {
             log::error!("file not found: {}", filename);
