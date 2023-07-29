@@ -67,5 +67,5 @@ Storage space samples:
 * benchmarks against single thread, pooling and async
 * use [Protocol Buffers](https://protobuf.dev/) for wire messages: https://github.com/tokio-rs/prost
 
-* file server: add support for partial requests (Content-Range)
+* WIP: file server: add support for partial requests (Content-Range)
 * file server: add support for If-Modified-Since, If-None-Match
