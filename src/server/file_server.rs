@@ -1,8 +1,10 @@
 use std::net::SocketAddr;
+use std::ops::Range;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread::JoinHandle;
 
+use tokio::io::AsyncReadExt;
 use tokio::net::TcpListener;
 use tokio::runtime::Runtime;
 
@@ -128,6 +130,9 @@ async fn get_file_len(filename: &str) -> MyResult<u64>{
     let metadata = file.metadata().await?;
     if metadata.is_file() {
         let file_len = metadata.len();
+        if log::log_enabled!(log::Level::Trace) {
+            log::trace!("The length of the file '{}' is {} bytes", filename, file_len)
+        }
         return Ok(file_len);
     }
     let err_msg = format!("Not a file: {}", filename);
@@ -150,28 +155,71 @@ async fn file_send(req: &Request<hyper::body::Incoming>) -> Result<Response<Full
         log::debug!("recevied request {}, filename:{}", req.method(), filename);
     }
 
+    let mut content_total_len = 0;
+    let mut ranges: Vec<Range<u64>> = vec![];
     let headers = req.headers();
     if headers.contains_key(hyper::header::CONTENT_RANGE) {
-        let content_range = headers.get(hyper::header::CONTENT_RANGE).unwrap();
         let _file_len = get_file_len(&filename).await;
         if let Ok(file_len) = _file_len {
-            http_range::parse(content_range.to_str().unwrap(), file_len);
+            content_total_len = file_len;            
+            let content_range = headers.get(hyper::header::CONTENT_RANGE).unwrap();
+            let _ranges = http_range::parse(content_range.to_str().unwrap(), file_len);
+            if _ranges.is_some() {
+                ranges = _ranges.unwrap();
+            }
         } else {
             return Ok(not_found());
         }
     }
+    if ranges.is_empty() {
+        if let Ok(contents) = tokio::fs::read(&filename).await {
+            let body = contents.into();
+            let mut response = Response::new(Full::new(body));
+    
+            let headers = response.headers_mut();
+            headers.insert(
+                hyper::header::ACCEPT_RANGES,
+                HeaderValue::from_str(http_range::RANGE_UNIT).unwrap(),
+            );
+    
+            return Ok(response);
+        }
+    } else {
+        for range in ranges {
 
-    if let Ok(contents) = tokio::fs::read(filename).await {
-        let body = contents.into();
-        let mut response = Response::new(Full::new(body));
-
-        let headers = response.headers_mut();
-        headers.insert(
-            hyper::header::ACCEPT_RANGES,
-            HeaderValue::from_str(http_range::RANGE_UNIT).unwrap(),
-        );
-
-        return Ok(response);
+            if log::log_enabled!(log::Level::Debug) {
+                log::debug!("preparing the range to send {:?}", range);
+            }
+        
+            use tokio::io::AsyncSeekExt;
+            use std::io::SeekFrom;
+            use bytes::BytesMut;
+            let capacity = (range.end - range.start + 1) as usize;
+            let mut buffer = BytesMut::with_capacity(capacity);
+            if let Ok(mut file) = tokio::fs::File::open(&filename).await {
+                if let Ok(_) = file.seek(SeekFrom::Start(range.start)).await {
+                    if let Ok(read_count) = file.read_exact(&mut buffer).await {
+                        let body: Bytes = buffer.into();
+    
+                        let response = Response::builder()
+                        .status(StatusCode::PARTIAL_CONTENT)
+                        .header(hyper::header::ACCEPT_RANGES, http_range::RANGE_UNIT)
+                        .header(hyper::header::CONTENT_LENGTH, read_count)
+                        .header(hyper::header::CONTENT_RANGE, format!("{} {}-{}/{}",http_range::RANGE_UNIT, range.start, range.end, content_total_len))
+                        .body(Full::new(body))
+                        .expect("unable to build response");
+                
+                        return Ok(response);
+                    } else {
+                        log::error!("could not read bytes");
+                    }
+                } else {
+                    log::error!("could not seek position: {}", range.start);
+                }
+            } else {
+                log::error!("could not open file: {}", filename);
+            }
+        }        
     }
 
     Ok(not_found())

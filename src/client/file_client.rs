@@ -74,7 +74,7 @@ async fn request_url(method: &str, url: hyper::Uri, range: Option<Range<u64>>) -
         .body(Empty::<Bytes>::new())?;
     
     if let Some(range_v) = range {
-       let range_value = format!("bytes {}-{}/*", range_v.start, range_v.end);
+       let range_value = format!("bytes={}-{}/*", range_v.start, range_v.end);
        req.headers_mut().append(hyper::header::CONTENT_RANGE, range_value.parse().unwrap()); 
     }
 

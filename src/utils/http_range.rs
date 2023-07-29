@@ -26,11 +26,16 @@ pub fn parse(range_value: &str, bytes_count: u64) -> Option<Vec<Range<u64>>> {
     }
     let mut ranges = Vec::<Range<u64>>::new();
 
-    let params = parts[1].split(",");
-    for param in params {
-        let values = param.split("-").map(|v| v.trim()).collect::<Vec<_>>();
+    let params = parts[1].split("/").map(|p| p.trim()).collect::<Vec<_>>();
+    if params.is_empty() {
+        return None;
+    }
+
+    let range_params = params[0].split(",");
+    for range_param in range_params {
+        let values = range_param.split("-").map(|v| v.trim()).collect::<Vec<_>>();
         if values.len() != 2 {
-            log::error!("Invalid range: {}, param: {}", range_value, param);
+            log::error!("Invalid range: {}, param: {}", range_value, range_param);
             return None;
         }
         let mut range = 0..bytes_count - 1;
@@ -71,6 +76,10 @@ pub fn parse(range_value: &str, bytes_count: u64) -> Option<Vec<Range<u64>>> {
         // remove merged ranges
         let mut index = 0;
         ranges.retain(|_|{let keep = retain[index]; index += 1; keep});
+    }
+    
+    if log::log_enabled!(log::Level::Trace) {
+        log::trace!("Parsed ranges:\n{:#?}", ranges);
     }
 
     Some(ranges)

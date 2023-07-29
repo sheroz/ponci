@@ -15,5 +15,8 @@ loggers:
     poncu::client:
         level: trace
 
+    poncu::utils:
+        level: trace
+        
     poncu::utils::config:
         level: info
