@@ -76,7 +76,7 @@ fn main() {
     file_client::get_file_info("http://127.0.0.1:8181/LICENSE");
     file_client::get_file("http://127.0.0.1:8181/LICENSE");
 
-    let range = 100..299;
+    let range = 48..482;
     file_client::get_file_in_range("http://127.0.0.1:8181/LICENSE", Some(range));
 
     let range = 2000..2100;

@@ -163,6 +163,9 @@ async fn get_file_len(filename: &str) -> MyResult<u64> {
 }
 
 async fn file_send(req: &Request<hyper::body::Incoming>) -> Result<Response<Full<Bytes>>> {
+
+    let content_type: &str = "text/html; charset=utf-8";
+
     if log::log_enabled!(log::Level::Trace) {
         log::trace!("recevied request:{:#?}", req);
     }
@@ -200,6 +203,7 @@ async fn file_send(req: &Request<hyper::body::Incoming>) -> Result<Response<Full
             if let Ok(response) = Response::builder()
                 .status(StatusCode::OK)
                 .header(hyper::header::ACCEPT_RANGES, http_range::RANGE_UNIT)
+                .header(hyper::header::CONTENT_TYPE, content_type)
                 .body(Full::new(body))
             {
                 return Ok(response);
@@ -268,6 +272,7 @@ async fn file_send(req: &Request<hyper::body::Incoming>) -> Result<Response<Full
                                     content_size
                                 ),
                             )
+                            .header(hyper::header::CONTENT_TYPE, content_type)
                             .body(Full::new(body))
                         {
                             return Ok(response);
