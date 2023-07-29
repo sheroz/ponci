@@ -1,7 +1,5 @@
-//! Implemented according to: Hypertext Transfer Protocol (HTTP/1.1): Range Requests
-//!
-//! [RFC7233](https://datatracker.ietf.org/doc/html/rfc7233)
-//!
+//! Implemented according [RFC7233](https://datatracker.ietf.org/doc/html/rfc7233), [RFC2616](https://www.ietf.org/rfc/rfc2616)
+//! 
 //! Additional resources:
 //!
 //! https://developer.mozilla.org/en-US/docs/Web/HTTP/Range_requests
@@ -123,6 +121,10 @@ pub fn parse(range_value: &str, bytes_count: u64) -> Option<HttpRange> {
     }
 
     Some(http_range)
+}
+
+pub fn is_range_satisfiable(http_range: HttpRange, content_length: u64 ) -> bool {
+    false
 }
 
 #[cfg(test)]
