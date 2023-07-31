@@ -15,12 +15,12 @@ use hyper::service::service_fn;
 use hyper::{Method, Request, Response, Result, StatusCode};
 use hyper_util::rt::TokioIo;
 
-use crate::utils::http_range::{self, HttpRange};
 use bytes::Bytes;
 use http_body_util::Full;
 
 use log;
 
+use http_common::http_range::{self, HttpRange};
 use crate::utils::config::Config;
 
 // A simple type alias so as to DRY.
