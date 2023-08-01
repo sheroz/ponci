@@ -7,7 +7,7 @@
 [![build & test](https://github.com/sheroz/poncu/actions/workflows/ci.yml/badge.svg)](https://github.com/sheroz/poncu/actions/workflows/ci.yml)
 [![MIT](https://img.shields.io/github/license/sheroz/poncu)](https://github.com/sheroz/poncu/tree/main/LICENSE.txt)
 
-Why Poncu?
+### Why Poncu
 
 There's a little life story behind this name. It was during my first visit to the HQ of Maxim Integrated, located in San Jose, California. I believe it was a Friday morning. My colleagues treated me to colorful donuts at the office. It was my first time trying such donuts. I also fondly remember the great atmosphere that we enjoyed. Those were truly wonderful days! Thus, in the dialect of my native language, we call donuts 'poncu' (пончики, or 'пончу' in my dialect). So, I liked poncu!
 
