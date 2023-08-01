@@ -24,7 +24,7 @@ use http_common::http_range::{self, HttpRange};
 use crate::utils::config::Config;
 
 // A simple type alias so as to DRY.
-type MyResult<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
+type FileServerResult<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
 pub fn start_file_server(
     config: &Config,
@@ -144,7 +144,7 @@ async fn file_info(req: &Request<hyper::body::Incoming>) -> Result<Response<Full
     }
 }
 
-async fn get_file_len(filename: &Path) -> MyResult<u64> {
+async fn get_file_len(filename: &Path) -> FileServerResult<u64> {
     let file = tokio::fs::File::open(filename).await?;
     let metadata = file.metadata().await?;
     if metadata.is_file() {
