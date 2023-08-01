@@ -82,22 +82,22 @@ async fn file_service(req: Request<hyper::body::Incoming>) -> Result<Response<Fu
     match req.method() {
         &Method::HEAD => file_info(&req).await,
         &Method::GET => file_send(&req).await,
-        _ => Ok(not_found()),
+        _ => Ok(send_error_404()),
     }
 }
 
-/// HTTP status code 404
-fn not_found() -> Response<Full<Bytes>> {
-    blank_response(StatusCode::NOT_FOUND)
-}
-
 /// HTTP status code 403
-fn forbidden() -> Response<Full<Bytes>> {
+fn send_error_403() -> Response<Full<Bytes>> {
     blank_response(StatusCode::FORBIDDEN)
 }
 
+/// HTTP status code 404
+fn send_error_404() -> Response<Full<Bytes>> {
+    blank_response(StatusCode::NOT_FOUND)
+}
+
 /// HTTP status code 500
-fn internal_server_error() -> Response<Full<Bytes>> {
+fn send_error_500() -> Response<Full<Bytes>> {
     blank_response(StatusCode::INTERNAL_SERVER_ERROR)
 }
 
@@ -117,7 +117,7 @@ async fn file_info(req: &Request<hyper::body::Incoming>) -> Result<Response<Full
 
     if file_path.file_name().is_none() {
         log::error!("filename is empty");
-        return Ok(forbidden());
+        return Ok(send_error_403());
     }
 
     match get_file_len(&file_path).await {
@@ -134,12 +134,12 @@ async fn file_info(req: &Request<hyper::body::Incoming>) -> Result<Response<Full
                 Ok(response)
             } else {
                 log::error!("unable to build response");
-                Ok(internal_server_error())
+                Ok(send_error_500())
             }
         }
         Err(_err) => {
             log::error!("file not found: {:?}", file_path);
-            Ok(not_found())
+            Ok(send_error_404())
         }
     }
 }
@@ -151,7 +151,7 @@ async fn get_file_len(filename: &Path) -> MyResult<u64> {
         let file_len = metadata.len();
         if log::log_enabled!(log::Level::Trace) {
             log::trace!(
-                "The length of the file '{:?}' is {} bytes",
+                "The length of the file {:?} is {} bytes",
                 filename,
                 file_len
             )
@@ -174,7 +174,7 @@ async fn file_send(req: &Request<hyper::body::Incoming>) -> Result<Response<Full
 
     if file_path.file_name().is_none() {
         log::error!("filename is empty");
-        return Ok(forbidden());
+        return Ok(send_error_403());
     }
 
     let content_length: u64;
@@ -182,7 +182,7 @@ async fn file_send(req: &Request<hyper::body::Incoming>) -> Result<Response<Full
         content_length = file_len;
     } else {
         log::error!("file not found: {:?}", file_path);
-        return Ok(not_found());
+        return Ok(send_error_404());
     }
 
     let headers = req.headers();
@@ -216,10 +216,10 @@ async fn send_file_full(filename: &Path, content_type: &str) -> Result<Response<
             return Ok(response);
         } else {
             log::error!("unable to build response");
-            return Ok(internal_server_error());
+            return Ok(send_error_500());
         }
     }
-    Ok(not_found())
+    Ok(send_error_404())
 }
 
 async fn send_file_range(
@@ -244,7 +244,7 @@ async fn send_file_range(
             return Ok(response);
         } else {
             log::error!("unable to build response");
-            return Ok(internal_server_error());
+            return Ok(send_error_500());
         }
     }
 
@@ -287,7 +287,7 @@ async fn send_file_range(
                             return Ok(response);
                         } else {
                             log::error!("unable to build response");
-                            return Ok(internal_server_error());
+                            return Ok(send_error_500());
                         }
                     } else {
                         log::error!("could not read bytes from file");
@@ -301,5 +301,5 @@ async fn send_file_range(
         }
     }
 
-    Ok(not_found())
+    Ok(send_error_404())
 }
