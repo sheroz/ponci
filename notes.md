@@ -4,7 +4,7 @@
   * support for storing: file, blob, json, xml, arrays, set, map, primitive types
   * support for metafields: tags, descriptions, metadata
   * support for seek operations for blobs and files (reading data at given position)
-  * support for streaming
+  * support for media streaming
 
 * File server
   * fetch using HTTP
@@ -18,15 +18,15 @@
   * heartbeat
   * consistent hashing
   * easy scaling
-    * built-in configuration service in nodes
-    * auto replication of configuration parameters among nodes
-    * automatic (plug & play) configuration of existing nodes when a new node added into claster
-      * new node needs to know at least one neighbour in the claster. The added node and other nodes would be updated automatically after completing the claster configuration rebuild process.
-    * any change in the claster configuration that set or discovered (adding new node, failing existing nodes), would be automatically replicated to other nodes in the claster (no need for master node)
-    * configuration updates are received by clients automatically
-      * each request of client includes a config_id parameter
-      * server node will analyze the received config_id and may respond to client with updated configuration
-    * clients and nodes build weighted graphs to optimize node/peer selection and other network operations.
+    * support for built-in configuration service in nodes
+    * support for auto replicating of configuration parameters in claster nodes
+    * support for plug & play in adding a new node into claster and re-configurating of existing nodes
+      * new node needs to know at least one neighbour in the claster. The added node and other nodes would be updated after completing the re-configuration and re-building process of claster.
+    * any change in the claster configuration (adding new node, failing existing nodes), would be auto replicated to other nodes in the claster (no need for master node)
+    * clients would be auto-updated after re-configuration
+      * each client request includes a config_id parameter
+      * server node will analyze the received config_id and may respond with updated configuration settings
+    * clients and nodes use weighted graphs to optimize node/peer selection and other network operations.
 
 * Caching
   * support for evictions (LRU)
