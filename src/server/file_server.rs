@@ -188,7 +188,7 @@ async fn file_send(req: &Request<hyper::body::Incoming>) -> Result<Response<Full
     let headers = req.headers();
     let http_range_option = if headers.contains_key(hyper::header::CONTENT_RANGE) {
         let content_range = headers.get(hyper::header::CONTENT_RANGE).unwrap();
-        http_range::parse(content_range.to_str().unwrap(), content_length)
+        HttpRange::from_header(content_range.to_str().unwrap(), content_length)
     } else {
         None
     };
@@ -228,7 +228,7 @@ async fn send_file_range(
     content_length: u64,
     http_range: &HttpRange,
 ) -> Result<Response<Full<Bytes>>> {
-    if http_range::none_satisfiable(&http_range, content_length) {
+    if http_range.none_satisfiable(content_length) {
         if let Ok(response) = Response::builder()
             .status(StatusCode::RANGE_NOT_SATISFIABLE)
             .header(hyper::header::ACCEPT_RANGES, http_range::RANGE_UNIT)
@@ -256,7 +256,7 @@ async fn send_file_range(
             log::trace!("capacity {}", capacity);
         }
 
-        if http_range::range_satisfiable(&range, content_length) {
+        if HttpRange::range_satisfiable(&range, content_length) {
             let mut buffer = vec![0; capacity];
             if let Ok(mut file) = tokio::fs::File::open(&filename).await {
                 if let Ok(_seek) = file.seek(SeekFrom::Start(range.start)).await {

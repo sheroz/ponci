@@ -7,10 +7,11 @@ use tokio::io::{self, AsyncWriteExt as _};
 use tokio::net::TcpStream;
 use tokio::runtime::Runtime;
 
+use http_common::http_range::{HttpRange, CompleteLength};
 use hyper_util::rt::TokioIo;
 
 // A simple type alias so as to DRY.
-type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
+type FileClientResult<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
 pub fn get_file(url: &str) {
     get_file_in_range(url, None)
@@ -23,10 +24,10 @@ pub fn get_file_in_range(url: &str, range: Option<Range<u64>>) {
     async_runtime.block_on(async {
         let result = request_url("GET", url, range).await;
         match result {
-            Err(err) =>  {
+            Err(err) => {
                 log::error!("Connection failed: {:?}", err);
             }
-            Ok(()) => ()
+            Ok(()) => (),
         }
     });
 }
@@ -38,16 +39,19 @@ pub fn get_file_info(url: &str) {
     async_runtime.block_on(async {
         let result = request_url("HEAD", url, None).await;
         match result {
-            Err(err) =>  {
+            Err(err) => {
                 log::error!("Connection failed: {:?}", err);
             }
-            Ok(()) => ()
+            Ok(()) => (),
         }
     });
 }
 
-async fn request_url(method: &str, url: hyper::Uri, range: Option<Range<u64>>) -> Result<()> {
-
+async fn request_url(
+    method: &str,
+    url: hyper::Uri,
+    range: Option<Range<u64>>,
+) -> FileClientResult<()> {
     let host = url.host().expect("uri has no host");
     let port = url.port_u16().unwrap_or(80);
     let addr = format!("{}:{}", host, port);
@@ -62,7 +66,12 @@ async fn request_url(method: &str, url: hyper::Uri, range: Option<Range<u64>>) -
     });
 
     if log::log_enabled!(log::Level::Trace) {
-        log::trace!("File client connected to {}://{}:{}", url.scheme().unwrap(), host, port);
+        log::trace!(
+            "File client connected to {}://{}:{}",
+            url.scheme().unwrap(),
+            host,
+            port
+        );
     }
 
     let authority = url.authority().unwrap().clone();
@@ -72,10 +81,16 @@ async fn request_url(method: &str, url: hyper::Uri, range: Option<Range<u64>>) -
         .method(method)
         .header(hyper::header::HOST, authority.as_str())
         .body(Empty::<Bytes>::new())?;
-    
+
     if let Some(range_v) = range {
-       let range_value = format!("bytes={}-{}/*", range_v.start, range_v.end);
-       req.headers_mut().append(hyper::header::CONTENT_RANGE, range_value.parse().unwrap()); 
+        let http_range = HttpRange {
+            ranges: vec![range_v],
+            complete_length: Some(CompleteLength::Unknown),
+        };
+        req.headers_mut().append(
+            hyper::header::CONTENT_RANGE,
+            http_range.to_header().parse().unwrap(),
+        );
     }
 
     if log::log_enabled!(log::Level::Trace) {

@@ -26,7 +26,7 @@ hyper-util = { git = "https://github.com/hyperium/hyper-util.git" }
 http-body-util = "0.1.0-rc.3"
 bytes = "1"
 
-http_common = "0.1"
+http_common = "0.2"
 
 [dev-dependencies]
 criterion = "0.5"
