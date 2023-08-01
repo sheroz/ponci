@@ -9,6 +9,6 @@
 
 Why Poncu?
 
-There's a little life story behind this name. The first time I visited the US was in San Jose, California, where the headquarters of Maxim Integrated, the company I worked for, was located. I believe it was a Friday, and in the morning, my colleagues treated me to colorful donuts at the office. It was my first time trying such colorful donuts, and I also fondly remember the great atmosphere there we had in the office. Those were truly wonderful days! Thus, in the dialect of my native language, we call donuts 'poncu' (пончики, or 'пончу' in my dialect). So, I liked poncu!
+There's a little life story behind this name. It was during my first visit to the HQ of Maxim Integrated (San Jose, CA). I believe it was a Friday morning, and my colleagues treated me to colorful donuts at the office. It was my first time trying such colorful donuts, and I also fondly remember the great atmosphere that we had. Those were truly wonderful days! Thus, in the dialect of my native language, we call donuts 'poncu' (пончики, or 'пончу' in my dialect). So, I liked poncu!
 
-(I remember that guys visited us in Istanbul and very liked Turkish Kunefe, so, maybe we can dive together into some other project named "kunefe" next?)
+(I remember, guys visited us in Istanbul and very liked Turkish Kunefe, so next, maybe we can dive together into some other Rust project named "kunefe"?)
