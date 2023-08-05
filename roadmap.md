@@ -3,25 +3,29 @@
 ## Features
 
 - WIP: Support for commonly used data types and structures
-  - support for storing: file, blob, json, xml, arrays, set, map, primitive types
-  - support for metafields: tags, descriptions, metadata
+  - WIP: support for storing: file, blob, json, xml, arrays, set, map, primitive types
+  - WIP: support for metafields: tags, descriptions, metadata
   
 - WIP: TCP Server
-  - basic functionality
-  - async support
+  - WIP: basic functionality
+  - WIP: async support
 
 - WIP: HTTP File Server
-  - basic functionality
-  - async support
-  - streaming (seeking and reading data at given position)
+  - WIP: basic functionality
+  - WIP: async support
+  - WIP: streaming (seeking and reading data at given position)
+    - (+) support for partial requests (Content-Range)
+    - WIP: support for If-Range, If-Modified-Since, If-None-Match, Etag
 
 - WIP: Client
-  - basic functionality
-  - async support
+  - (+) basic functionality
+  - WIP: async support
 
 - WIP: Configuration
+  - (+) server and client sections
 
 - WIP: Logging
+  - (+) basic functionality
 
 - Authentification and Authorization
   - support for JWT
@@ -76,14 +80,9 @@ Storage space samples:
         item_id1 : FileItem
     ]
 
-- WIP: config file with server and client sections
 - benchmarks against single thread, pooling and async
 - use [Protocol Buffers](https://protobuf.dev/) for [wire messages](https://github.com/tokio-rs/prost)
 
-- WIP: file server: add support for partial requests (Content-Range)
-- file server: add support for If-Modified-Since, If-None-Match
-
-file server: http if range,etags
 client: send file http
 client: get file http
 client: send file tcp
