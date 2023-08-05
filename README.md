@@ -9,7 +9,7 @@
 
 ### Why Poncu
 
-There's a little life story behind this name. It was during my first visit to the HQ of Maxim Integrated, located in San Jose, California. I believe it was a Friday morning. My colleagues treated me to colorful donuts at the office, and it was my first time trying such donuts. I also fondly remember the great atmosphere that we enjoyed. Those were truly wonderful days! Thus, in the dialect of my native language, we call donuts 'poncu' (пончики, or 'пончу' in my dialect). So, I liked poncu!
+There's a little life story behind this name. It was during my first visit to the HQ of Maxim Integrated, located in San Jose, California. I believe it was a Friday morning. I remember, my colleagues treated me to colorful donuts at the office. It was my first time trying such donuts. I also fondly remember the great atmosphere that we enjoyed then. Those were truly wonderful days! Thus, we call donuts as 'poncu' in the dialect of my native language (пончики, or 'пончу'). So, I liked poncu!
 
 (I remember, guys visited us in Istanbul and very liked Turkish Kunefe, so next, maybe we can dive together into some other Rust project named "kunefe"?)
 
