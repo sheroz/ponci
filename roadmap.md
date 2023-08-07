@@ -15,7 +15,7 @@
   - WIP: async support
   - WIP: streaming (seeking and reading data at given position)
     - (+) support for partial requests (Content-Range)
-    - WIP: support for If-Range, If-Modified-Since, If-None-Match, Etag
+    - WIP: support for If-Range, If-Modified-Since, If-None-Match, Last-Modified, Etag
 
 - WIP: Client
   - (+) basic functionality
@@ -83,13 +83,17 @@ Storage space samples:
 - benchmarks against single thread, pooling and async
 - use [Protocol Buffers](https://protobuf.dev/) for [wire messages](https://github.com/tokio-rs/prost)
 
-client: send file http
-client: get file http
-client: send file tcp
-client: get file tcp
+## Recent
 
-authorization: node_token XOR …
-client_access_token = …
-node_token = …
-path_access_token = …
-item_access_token = …
+- Complete if range
+- Start protobufs
+- Client-server:
+  - send/get map(string,string)
+  - send/get file http
+  - send/get file tcp
+- authorization:
+  - node_token XOR …
+  - client_access_token = …
+  - node_token = …
+  - path_access_token = …
+  - item_access_token = …
