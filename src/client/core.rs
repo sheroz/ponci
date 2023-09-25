@@ -58,8 +58,8 @@ impl<'a> TcpClient<'a> for PoncuTcpClient<'a> {
     fn get_item(&mut self, _key: String) -> std::io::Result<()> {
         let stream = self.stream.as_mut().unwrap();
         let mut buf = [0; 128];
-        stream.write(&buf)?;
-        stream.read(&mut buf)?;
+        stream.write_all(&buf)?;
+        stream.read_exact(&mut buf)?;
         Ok(())
     }
 

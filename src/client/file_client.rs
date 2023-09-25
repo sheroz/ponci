@@ -23,11 +23,8 @@ pub fn get_file_in_range(url: &str, range: Option<Range<u64>>) {
     let async_runtime = Runtime::new().unwrap();
     async_runtime.block_on(async {
         let result = request_url("GET", url, range).await;
-        match result {
-            Err(err) => {
-                log::error!("Connection failed: {:?}", err);
-            }
-            Ok(()) => (),
+        if let Err(err) = result {
+            log::error!("Connection failed: {:?}", err)
         }
     });
 }
@@ -38,11 +35,8 @@ pub fn get_file_info(url: &str) {
     let async_runtime = Runtime::new().unwrap();
     async_runtime.block_on(async {
         let result = request_url("HEAD", url, None).await;
-        match result {
-            Err(err) => {
-                log::error!("Connection failed: {:?}", err);
-            }
-            Ok(()) => (),
+        if let Err(err) = result {
+            log::error!("Connection failed: {:?}", err)
         }
     });
 }
