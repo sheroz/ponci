@@ -79,9 +79,9 @@ async fn file_service(req: Request<hyper::body::Incoming>) -> Result<Response<Fu
         log::trace!("recevied request:{:#?}", req);
     }
 
-    match req.method() {
-        &Method::HEAD => file_info(&req).await,
-        &Method::GET => file_send(&req).await,
+    match *req.method() {
+        Method::HEAD => file_info(&req).await,
+        Method::GET => file_send(&req).await,
         _ => Ok(send_error_404()),
     }
 }
