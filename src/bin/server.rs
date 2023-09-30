@@ -1,6 +1,5 @@
 use core::time;
 use log::{log_enabled, Level};
-use log4rs;
 use poncu::server::core::{PoncuTcpServer, TcpServer};
 use poncu::utils::config;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -29,9 +28,8 @@ fn main() {
         }
         thread::sleep(time::Duration::from_millis(20));
     }
-    
+
     if log_enabled!(Level::Trace) {
         log::trace!("server ready.");
     }
-
 }

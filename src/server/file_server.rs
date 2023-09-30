@@ -20,8 +20,8 @@ use http_body_util::Full;
 
 use log;
 
-use http_common::http_range::{self, HttpRange};
 use crate::utils::config::Config;
+use http_common::http_range::{self, HttpRange};
 
 // A simple type alias so as to DRY.
 type FileServerResult<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
@@ -109,7 +109,7 @@ fn blank_response(status_code: StatusCode) -> Response<Full<Bytes>> {
 }
 
 async fn file_info(req: &Request<hyper::body::Incoming>) -> Result<Response<Full<Bytes>>> {
-    let path = req.uri().path().replace("/", "");
+    let path = req.uri().path().replace('/', "");
     let file_path = Path::new(&path);
     if log::log_enabled!(log::Level::Debug) {
         log::debug!("file path:{:?}", file_path);
@@ -120,7 +120,7 @@ async fn file_info(req: &Request<hyper::body::Incoming>) -> Result<Response<Full
         return Ok(send_error_403());
     }
 
-    match get_file_len(&file_path).await {
+    match get_file_len(file_path).await {
         Ok(file_len) => {
             if let Ok(response) = Response::builder()
                 .status(StatusCode::OK)
@@ -166,7 +166,7 @@ async fn get_file_len(filename: &Path) -> FileServerResult<u64> {
 async fn file_send(req: &Request<hyper::body::Incoming>) -> Result<Response<Full<Bytes>>> {
     let content_type: &str = "text/html; charset=utf-8";
 
-    let path = req.uri().path().replace("/", "");
+    let path = req.uri().path().replace('/', "");
     let file_path = Path::new(&path);
     if log::log_enabled!(log::Level::Debug) {
         log::debug!("file path: {:?}", file_path);
@@ -178,7 +178,7 @@ async fn file_send(req: &Request<hyper::body::Incoming>) -> Result<Response<Full
     }
 
     let content_length: u64;
-    if let Ok(file_len) = get_file_len(&file_path).await {
+    if let Ok(file_len) = get_file_len(file_path).await {
         content_length = file_len;
     } else {
         log::error!("file not found: {:?}", file_path);
@@ -196,11 +196,11 @@ async fn file_send(req: &Request<hyper::body::Incoming>) -> Result<Response<Full
     match http_range_option {
         // send a response in ranges
         Some(http_range) => {
-            send_file_range(&file_path, &content_type, content_length, &http_range).await
+            send_file_range(file_path, content_type, content_length, &http_range).await
         }
 
         // send a response with full content
-        None => send_file_full(&file_path, &content_type).await,
+        None => send_file_full(file_path, content_type).await,
     }
 }
 
@@ -256,7 +256,7 @@ async fn send_file_range(
             log::trace!("capacity {}", capacity);
         }
 
-        if HttpRange::range_satisfiable(&range, content_length) {
+        if HttpRange::range_satisfiable(range, content_length) {
             let mut buffer = vec![0; capacity];
             if let Ok(mut file) = tokio::fs::File::open(&filename).await {
                 if let Ok(_seek) = file.seek(SeekFrom::Start(range.start)).await {
