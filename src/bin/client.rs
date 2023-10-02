@@ -1,5 +1,3 @@
-use log;
-use log4rs;
 use poncu::client::core::{PoncuTcpClient, TcpClient};
 use poncu::utils::config;
 

@@ -3,7 +3,7 @@ use crate::server::items::item_type::{complex::ItemComplexType, storage::ItemSto
 
 pub struct StorageItem {
     _item_type: ItemComplexType,
-    _data: Box<Vec<u8>>,
+    _data: Vec<u8>,
     _description: String,
     _tags: Vec<String>,
     _metadata: HashMap<String, String>,

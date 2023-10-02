@@ -69,15 +69,14 @@ pub fn get_config() -> Arc<Config> {
 
 fn parse_listen_on(node: &HashMap<String, String>) -> Vec::<SocketAddr> {
     let node_key = "listen_addresses";
-    let listen_addresses: Vec<_>;
-    if node.contains_key(node_key) {
-        listen_addresses = node[node_key]
+    let listen_addresses = if node.contains_key(node_key) {
+        node[node_key]
             .split(',')
             .map(|s| s.trim())
-            .collect::<Vec<_>>();
+            .collect::<Vec<_>>()
     } else {
-        listen_addresses = vec!["127.0.0.1"];
-    }
+        vec!["127.0.0.1"]
+    };
 
     if log::log_enabled!(log::Level::Trace) {
         log::trace!("config: listen_addresses: {:?}", listen_addresses);
@@ -109,15 +108,14 @@ fn parse_listen_on(node: &HashMap<String, String>) -> Vec::<SocketAddr> {
 
 fn parse_remote(node: &HashMap<String, String>) -> Remote {
     let node_key = "nodes";
-    let remote_nodes: Vec<_>;
-    if node.contains_key(node_key) {
-        remote_nodes = node[node_key]
+    let remote_nodes = if node.contains_key(node_key) {
+        node[node_key]
             .split(',')
             .map(|s| s.trim())
-            .collect::<Vec<_>>();
+            .collect::<Vec<_>>()
     } else {
-        remote_nodes = vec![];
-    }
+        vec![]
+    };
 
     if log::log_enabled!(log::Level::Trace) {
         log::trace!("config: remote nodes: {:?}", remote_nodes);
