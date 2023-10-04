@@ -31,6 +31,12 @@
   - support for JWT
   - support for Fine-Grained Access Control
 
+- Remote collections
+  - HashSet
+  - HashMap
+  - Vec
+  - VecDeque
+
 - Scaling
   - easy scaling
     - support for built-in configuration service in nodes
