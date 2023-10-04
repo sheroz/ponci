@@ -1,6 +1,6 @@
 # Poncu
 
-## Storage System
+## Distributed Storage System
 
 [![crates.io](https://img.shields.io/crates/v/poncu)](https://crates.io/crates/poncu)
 [![docs](https://img.shields.io/docsrs/poncu)](https://docs.rs/poncu)
