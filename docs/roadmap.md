@@ -1,6 +1,25 @@
 # Roadmap
 
-## Features
+## Key Features
+
+### Server
+
+- Storage
+  - Core API
+  - REST API
+  - HTTP File Server
+  
+- Collections
+  - Core API
+  - REST API
+
+### Client
+
+- Rust
+- Python
+- Go
+
+## Implementation Roadmap
 
 - WIP: Support for commonly used data types and structures
   - WIP: support for storing: file, blob, json, xml, arrays, set, map, primitive types
